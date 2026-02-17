@@ -67,6 +67,7 @@ void list_prepend_value(ListNode **head, const int data)
     *head = new_node;
 }
 
+// Restruct project's files and add new functions
 
 void list_insert_value(ListNode **head, const int data, int index)
 {
