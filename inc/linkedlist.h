@@ -1,9 +1,9 @@
 //
-// Created by Gabriel Souza on 16/02/2026.
+// Created by Gabriel Souza on 17/02/2026.
 //
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifndef DATA_STRUCTURES_LINKEDLIST_H
+#define DATA_STRUCTURES_LINKEDLIST_H
 
 /**
  * @brief Represents a node in a singly linked list.
@@ -45,12 +45,7 @@ typedef struct ListNode {
  * list_free(&list_example);
  * @endcode
  */
-void list_init(ListNode **head)
-{
-    if (head != NULL)
-        *head = NULL;
-}
-
+void list_init(ListNode **head);
 
 /**
  * @brief Frees all memory allocated for the linked list.
@@ -72,18 +67,7 @@ void list_init(ListNode **head)
  * list_free(&list_example);
  * @endcode
  */
-void list_free(ListNode **head)
-{
-    if (head == NULL || *head == NULL) return;
-
-    while (*head != NULL)
-    {
-        ListNode *node = *head;
-        *head = (*head)->next;
-        free(node);
-    }
-}
-
+void list_free(ListNode **head);
 
 /**
 * @brief Inserts a new value at the end of the linked list.
@@ -100,29 +84,47 @@ void list_free(ListNode **head)
 * list_append_value(&list_example, 10);
 * @endcode
 */
-void list_append_value(ListNode **head, const int data)
-{
-    if (head == NULL) return;
+void list_append_value(ListNode **head, int data);
 
-    ListNode *new_node = malloc(sizeof(ListNode));
-    if(new_node == NULL) return;
+/**
+ *
+ */
+void list_prepend_value(ListNode **head, int data);
 
-    new_node->data = data;
-    new_node->next = NULL;
+/**
+ * @brief Inserts a value at the specified index in the linked list.
+ *
+ * @param head Double pointer to the head of the (list's address).
+ * @param data The integer value to be stored in the new node.
+ * @param index Position where to insert (0-based). If index equals list size, appends to the end.
+ *              If index > size, insertion fails.
+ *
+ * @note Time complexity: O(n+1), where n is the given index.
+ */
+void list_insert_value(ListNode **head, int data, int index);
 
-    if (*head == NULL)
-    {
-        *head = new_node;
-        return;
-    }
+void list_remove_value(ListNode **head, int data);
 
-    ListNode *prev_node = *head;
-    while(prev_node->next != NULL)
-        prev_node = prev_node->next;
+void list_remove_node(ListNode **head, int index);
 
-    prev_node->next = new_node;
-}
+int list_contains_value(const ListNode *head, int data);
 
+/**
+ * @brief Returns the number of elements in the linked list.
+ *
+ * Traverses the list and counts each node until reaching NULL.
+ *
+ * @param head Pointer to the first node of the list (can be NULL)
+ * @return int Number of nodes in the list (0 if list is empty)
+ *
+ * @code
+ * ListNode* list_example = NULL;
+ * list_insert(&list_example, 10);
+ * list_insert(&list_example, 20);
+ * int len = list_length(list_example);  // Returns 2
+ * @endcode
+ */
+int list_length(const ListNode *head);
 
 /**
  * @brief Prints all elements of the linked list in a formatted way.
@@ -142,51 +144,6 @@ void list_append_value(ListNode **head, const int data)
  * list_print(list_example);  // Output: [10, 20]
  * @endcode
  */
-void list_print(const ListNode *head)
-{
-    printf("[");
+void list_print(const ListNode *head);
 
-    if (head != NULL)
-    {
-        printf("%d", head->data);
-        head = head->next;
-
-        while (head != NULL)
-        {
-            printf(", %d", head->data);
-            head = head->next;
-        }
-    }
-
-    printf("]");
-}
-
-
-/**
- * @brief Returns the number of elements in the linked list.
- *
- * Traverses the list and counts each node until reaching NULL.
- *
- * @param head Pointer to the first node of the list (can be NULL)
- * @return int Number of nodes in the list (0 if list is empty)
- *
- * @code
- * ListNode* list_example = NULL;
- * list_insert(&list_example, 10);
- * list_insert(&list_example, 20);
- * int len = list_length(list_example);  // Returns 2
- * @endcode
- */
-int list_length(const ListNode *head)
-{
-    if (head == NULL) return 0;
-
-    int length = 0;
-    while (head != NULL)
-    {
-        head = head->next;
-        length++;
-    }
-
-    return length;
-}
+#endif //DATA_STRUCTURES_LINKEDLIST_H
