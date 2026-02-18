@@ -4,158 +4,129 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 
-#include "../inc/linkedlist.h"
+#include "linkedlist.h"
+#include "internal/node.h"
 
-void list_init(ListNode **head)
+/**
+ * @brief Internal list free function.
+ *
+ * @param list The address of the list.
+ */
+void _list_free(List *list)
 {
-    if (head != NULL)
-        *head = NULL;
-}
+    if (list == NULL) return;
 
-
-void list_free(ListNode **head)
-{
-    if (head == NULL || *head == NULL) return;
-
-    while (*head != NULL)
+    Node *head = list->head;
+    while (head != NULL)
     {
-        ListNode *node = *head;
-        *head = (*head)->next;
+        Node *node = head;
+        head = head->next;
+
         free(node);
     }
-}
 
-
-void list_append_value(ListNode **head, const int data)
-{
-    if (head == NULL) return;
-
-    ListNode *new_node = malloc(sizeof(ListNode));
-    if(new_node == NULL) return;
-
-    new_node->data = data;
-    new_node->next = NULL;
-
-    if (*head == NULL)
-    {
-        *head = new_node;
-        return;
-    }
-
-    ListNode *prev_node = *head;
-    while(prev_node->next != NULL)
-        prev_node = prev_node->next;
-
-    prev_node->next = new_node;
+    list->head = NULL;
+    list->tail = NULL;
+    list->length = 0;
 }
 
 /**
+ * @brief Internal list append function.
  *
+ * @param list The address of the list.
+ * @param data The data to be inserted into the list.
  */
-void list_prepend_value(ListNode **head, const int data)
+void _list_append(List *list, const void *data)
 {
-    if (head == NULL) return;
+    if (list == NULL) return;
 
-    ListNode *new_node = malloc(sizeof(ListNode));
-    if(new_node == NULL) return;
-
-    new_node->data = data;
-    new_node->next = *head;
-
-    *head = new_node;
-}
-
-// Restruct project's files and add new functions
-
-void list_insert_value(ListNode **head, const int data, int index)
-{
-    if (head == NULL) return;
-
-    if (index < 0)
-    {
-        index = list_length(*head) + index;
-        if (index < 0) return;
-    }
-
-    ListNode *new_node = malloc(sizeof(ListNode));
+    Node *new_node = malloc(sizeof(Node) + list->element_size);
     if (new_node == NULL) return;
 
-    new_node->data = data;
+    memcpy(new_node->data, data, list->element_size);
+    new_node->next = NULL;
 
+    if (list->head == NULL)
+    {
+        list->head = new_node;
+        list->tail = new_node;
+    }
+    else
+    {
+        list->tail->next = new_node;
+        list->tail = new_node;
+    }
+
+    list->length++;
+}
+
+/**
+ * @brief Internal list prepend function.
+ *
+ * @param list The address of the list.
+ * @param data The data to be inserted into the list.
+ */
+void _list_prepend(List *list, const void *data)
+{
+    if (list == NULL) return;
+
+    Node *new_node = malloc(sizeof(Node) + list->element_size);
+    if(new_node == NULL) return;
+
+    memcpy(new_node->data, data, list->element_size);
+    new_node->next = list->head;
+
+    if (list->head == NULL)
+        list->tail = new_node;
+
+    list->head = new_node;
+
+    list->length++;
+}
+
+/**
+ * @brief Internal list insertion function.
+ *
+ * @param list The address of the list.
+ * @param data The data to be inserted into the list.
+ * @param index The index where the new node will be placed (0-based).
+ *              Can be negative for from-end insertions.
+ */
+void _list_insert(List *list, const void *data, ptrdiff_t index)
+{
+    if (list == NULL || data == NULL) return;
+
+    // Negative index counts from the tail
+    if (index < 0)
+        index = (ptrdiff_t) list->length + index;
+
+    if (index < 0 || index > list->length) return;
+
+
+    // Insert at beginning
     if (index == 0)
+        _list_prepend(list, data);
+
+    // Insert at end
+    else if (index == list->length)
+        _list_append(list, data);
+
+    // Insert in middle
+    else
     {
-        new_node->next = *head;
-        *head = new_node;
-        return;
+        Node *prev_node = list->head;
+        for (long long i = 0; i < index - 1; i++)
+            prev_node = prev_node->next;
+
+        Node *new_node = malloc(sizeof(Node) + list->element_size);
+        if (new_node == NULL) return;
+
+        memcpy(new_node->data, data, list->element_size);
+        new_node->next = prev_node->next;
+        prev_node->next = new_node;
+
+        list->length++;
     }
-
-    ListNode *prev_node = *head;
-    int i = 0;
-
-    while (i < index - 1 && prev_node != NULL)
-    {
-        prev_node = prev_node->next;
-        i++;
-    }
-
-    if (prev_node == NULL)
-    {
-        free(new_node);
-        return;  // Index out of bounds
-    }
-
-    new_node->next = prev_node->next;
-    prev_node->next = new_node;
-}
-
-
-void list_remove_value(ListNode **head, const int data)
-{
-
-}
-
-void list_remove_node(ListNode **head, const int index)
-{
-
-}
-
-int list_contains_value(const ListNode *head, const int data)
-{
-    return 0;
-}
-
-int list_length(const ListNode *head)
-{
-    if (head == NULL) return 0;
-
-    int length = 0;
-    while (head != NULL)
-    {
-        head = head->next;
-        length++;
-    }
-
-    return length;
-}
-
-
-void list_print(const ListNode *head)
-{
-    printf("[");
-
-    if (head != NULL)
-    {
-        printf("%d", head->data);
-        head = head->next;
-
-        while (head != NULL)
-        {
-            printf(", %d", head->data);
-            head = head->next;
-        }
-    }
-
-    printf("]");
 }
