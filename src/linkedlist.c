@@ -3,8 +3,6 @@
 //
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "linkedlist.h"
 #include "internal/node.h"
@@ -18,14 +16,7 @@ void _list_free(List *list)
 {
     if (list == NULL) return;
 
-    Node *head = list->head;
-    while (head != NULL)
-    {
-        Node *node = head;
-        head = head->next;
-
-        free(node);
-    }
+    _node_free_all(&list->head);
 
     list->head = NULL;
     list->tail = NULL;
@@ -42,18 +33,14 @@ void _list_append(List *list, const void *data)
 {
     if (list == NULL) return;
 
-    Node *new_node = malloc(sizeof(Node) + list->element_size);
+    Node *new_node = _node_alloc(data, list->element_size);
     if (new_node == NULL) return;
-
-    memcpy(new_node->data, data, list->element_size);
-    new_node->next = NULL;
 
     if (list->head == NULL)
     {
         list->head = new_node;
         list->tail = new_node;
-    }
-    else
+    } else
     {
         list->tail->next = new_node;
         list->tail = new_node;
@@ -72,15 +59,13 @@ void _list_prepend(List *list, const void *data)
 {
     if (list == NULL) return;
 
-    Node *new_node = malloc(sizeof(Node) + list->element_size);
-    if(new_node == NULL) return;
-
-    memcpy(new_node->data, data, list->element_size);
-    new_node->next = list->head;
+    Node *new_node = _node_alloc(data, list->element_size);
+    if (new_node == NULL) return;
 
     if (list->head == NULL)
         list->tail = new_node;
 
+    new_node->next = list->head;
     list->head = new_node;
 
     list->length++;
@@ -109,7 +94,7 @@ void _list_insert(List *list, const void *data, ptrdiff_t index)
     if (index == 0)
         _list_prepend(list, data);
 
-    // Insert at end
+        // Insert at end
     else if (index == list->length)
         _list_append(list, data);
 
@@ -120,10 +105,9 @@ void _list_insert(List *list, const void *data, ptrdiff_t index)
         for (long long i = 0; i < index - 1; i++)
             prev_node = prev_node->next;
 
-        Node *new_node = malloc(sizeof(Node) + list->element_size);
+        Node *new_node = _node_alloc(data, list->element_size);
         if (new_node == NULL) return;
 
-        memcpy(new_node->data, data, list->element_size);
         new_node->next = prev_node->next;
         prev_node->next = new_node;
 
