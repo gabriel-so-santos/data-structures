@@ -17,23 +17,23 @@
         return (ListName){NULL, NULL, 0, sizeof(ItemType), destructor_func}; \
     } \
     \
-    static inline void ListName##_free(ListName *list_ptr) \
+    static inline DSErrCode ListName##_free(ListName *list_ptr) \
     { \
-        nodechain_free(list_ptr); \
+        return nodechain_free(list_ptr); \
     } \
     \
-    static inline void ListName##_append(ListName *list_ptr, ItemType value) \
+    static inline DSErrCode ListName##_append(ListName *list_ptr, ItemType value) \
     { \
-        nodechain_push_back(list_ptr, &value); \
+        return nodechain_push_back(list_ptr, &value); \
     } \
     \
-    static inline void ListName##_prepend(ListName *list_ptr, ItemType value) \
+    static inline DSErrCode ListName##_prepend(ListName *list_ptr, ItemType value) \
     { \
-        nodechain_push_front(list_ptr, &value); \
+        return nodechain_push_front(list_ptr, &value); \
     } \
     \
-    static inline void ListName##_insert(ListName *list_ptr, ItemType value, ptrdiff_t index) \
+    static inline DSErrCode ListName##_insert(ListName *list_ptr, ItemType value, ptrdiff_t index) \
     { \
-        nodechain_push_at(list_ptr, &value, index); \
+        return nodechain_push_at(list_ptr, &value, index); \
     }
 #endif //DATA_STRUCTURES_LINKEDLIST_H

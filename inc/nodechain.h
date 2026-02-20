@@ -24,16 +24,24 @@ typedef struct
     Destructor destructor_func;
 } NodeChain;
 
-void nodechain_init(NodeChain *nodechain_ptr, size_t value_size, Destructor destructor_func);
+typedef enum
+{
+    DS_SUCCESS = 0,
+    DS_ERR_ALLOCATION_FAILED = -1,
+    DS_ERR_NULL_POINTER = -2,
+    DS_ERR_INDEX_OUT_OF_BOUNDS = -3,
+    DS_ERR_INVALID_ARGUMENT = -4,
+} DSErrCode;
+
 
 Node *nodechain_alloc(const void *value_ptr, size_t value_size);
 
-void nodechain_free(NodeChain *nodechain_ptr);
+DSErrCode nodechain_free(NodeChain *nodechain_ptr);
 
-void nodechain_push_front(NodeChain *nodechain_ptr, const void *value_ptr);
+DSErrCode nodechain_push_front(NodeChain *nodechain_ptr, const void *value_ptr);
 
-void nodechain_push_back(NodeChain *nodechain_ptr, const void *value_ptr);
+DSErrCode nodechain_push_back(NodeChain *nodechain_ptr, const void *value_ptr);
 
-void nodechain_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptrdiff_t index);
+DSErrCode nodechain_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptrdiff_t index);
 
 #endif //DATA_STRUCTURES_NODECHAIN_H
