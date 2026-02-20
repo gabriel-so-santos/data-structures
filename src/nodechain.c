@@ -8,136 +8,118 @@
 
 #include "nodechain.h"
 
-void nodechain_init(NodeChain *node_chain, const size_t element_size, const Destructor destructor_func)
+
+Node *nodechain_alloc(const void *value_ptr, const size_t value_size)
 {
-    node_chain->head = NULL;
-    node_chain->tail = NULL;
-    node_chain->length = 0;
-    node_chain->element_size = element_size;
-    node_chain->destructor_func = destructor_func;
+    Node *new_node = malloc(sizeof(Node) + value_size);
+    if (!new_node) return NULL;
+
+    memcpy(new_node->value, value_ptr, value_size);
+    new_node->next = NULL;
+    return new_node;
 }
 
-Node *nodechain_alloc(const void *data, const size_t element_size)
+
+void nodechain_free(NodeChain *nodechain_ptr)
 {
-    Node *node = malloc(sizeof(Node) + element_size);
-    if (node == NULL) return NULL;
+    if (!nodechain_ptr) return;
 
-    memcpy(node->data, data, element_size);
-    node->next = NULL;
-    return node;
-}
-
-void nodechain_free(NodeChain *node_chain)
-{
-    if (node_chain == NULL) return;
-
-    Node *node = node_chain->head;
+    Node *node = nodechain_ptr->head;
 
     while (node != NULL)
     {
         Node *next = node->next;
 
-        if (node_chain->destructor_func != NULL)
-            node_chain->destructor_func(node->data);
+        if (nodechain_ptr->destructor_func != NULL)
+            nodechain_ptr->destructor_func(node->value);
 
         free(node);
         node = next;
     }
 
-    node_chain->head = NULL;
-    node_chain->tail = NULL;
-    node_chain->length = 0;
+    nodechain_ptr->head = NULL;
+    nodechain_ptr->tail = NULL;
+    nodechain_ptr->length = 0;
 }
 
-/**
- * Inserts a new node at the beginning of the chain.
- *
- * @param node_chain The address of the node chain structure.
- * @param data The data to be inserted into the list.
- */
-void nodechain_push_front(NodeChain *node_chain, const void *data)
+
+void nodechain_push_front(NodeChain *nodechain_ptr, const void *value_ptr)
 {
-    if (node_chain == NULL) return;
+    if (!nodechain_ptr) return;
 
-    Node *new_node = nodechain_alloc(data, node_chain->element_size);
-    if (new_node == NULL) return;
-    new_node->next = node_chain->head;
+    Node *new_node = nodechain_alloc(value_ptr, nodechain_ptr->value_size);
+    if (!new_node) return;
+    new_node->next = nodechain_ptr->head;
 
-    if (node_chain->head == NULL)
-        node_chain->tail = new_node;
+    if (!nodechain_ptr->head)
+        nodechain_ptr->tail = new_node;
 
-    node_chain->head = new_node;
+    nodechain_ptr->head = new_node;
 
-    node_chain->length++;
+    nodechain_ptr->length++;
 }
 
-/**
- * @brief Inserts a new node at end of the chain.
- *
- * @param node_chain The address of the node chain structure.
- * @param data The data to be inserted into the list.
- */
-void nodechain_push_back(NodeChain *node_chain, const void *data)
+
+void nodechain_push_back(NodeChain *nodechain_ptr, const void *value_ptr)
 {
-    if (node_chain == NULL) return;
+    if (!nodechain_ptr) return;
 
-    Node *new_node = nodechain_alloc(data, node_chain->element_size);
-    if (new_node == NULL) return;
+    Node *new_node = nodechain_alloc(value_ptr, nodechain_ptr->value_size);
+    if (!new_node) return;
 
-    if (node_chain->head == NULL)
+    if (!nodechain_ptr->head)
     {
-        node_chain->head = new_node;
-        node_chain->tail = new_node;
+        nodechain_ptr->head = new_node;
+        nodechain_ptr->tail = new_node;
     }
     else
     {
-        node_chain->tail->next = new_node;
-        node_chain->tail = new_node;
+        nodechain_ptr->tail->next = new_node;
+        nodechain_ptr->tail = new_node;
     }
 
-    node_chain->length++;
+    nodechain_ptr->length++;
 }
 
-/**
- * @brief Inserts a new node at the given index.
- *
- * @param node_chain The address of the node chain structure.
- * @param data The data to be inserted into the list.
- * @param index The index where the new node will be placed (0-based).
- *              Can be negative for from-end insertions.
- */
-void nodechain_push_at(NodeChain *node_chain, const void *data, ptrdiff_t index)
+
+void nodechain_push_at(NodeChain *nodechain_ptr, const void *value_ptr, const ptrdiff_t index)
 {
-    if (node_chain == NULL) return;
+    if (!nodechain_ptr) return;
+
+    if ((size_t) -index > nodechain_ptr->length) return;
+
+    size_t unsigned_index;
 
     // Negative index counts from the tail
     if (index < 0)
-        index = (ptrdiff_t) node_chain->length + index;
+        unsigned_index = nodechain_ptr->length + index;
+    else
+        unsigned_index = index;
 
-    if (index < 0 || index > node_chain->length) return;
+    if (unsigned_index > nodechain_ptr->length) return;
 
 
     // Insert at beginning
-    if (index == 0)
-        nodechain_push_front(node_chain, data);
+    if (unsigned_index == 0)
+        nodechain_push_front(nodechain_ptr, value_ptr);
 
     // Insert at end
-    else if (index == node_chain->length)
-        nodechain_push_back(node_chain, data);
+    else if (unsigned_index == nodechain_ptr->length)
+        nodechain_push_back(nodechain_ptr, value_ptr);
 
     // Insert in middle
     else
     {
-        Node *prev_node = node_chain->head;
-        for (long long i = 0; i < index - 1; i++)
+        Node *prev_node = nodechain_ptr->head;
+        for (size_t i = 0; i < unsigned_index - 1; i++)
             prev_node = prev_node->next;
 
-        Node *new_node = nodechain_alloc(data, node_chain->element_size);
-        if (new_node == NULL) return;
+        Node *new_node = nodechain_alloc(value_ptr, nodechain_ptr->value_size);
+        if (!new_node) return;
 
         new_node->next = prev_node->next;
         prev_node->next = new_node;
 
-        node_chain->length++;
+        nodechain_ptr->length++;
     }
 }

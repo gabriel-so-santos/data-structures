@@ -9,31 +9,31 @@
 
 #include "nodechain.h"
 
-#define DEFINE_TYPED_LIST(Type, ListName) \
+#define DEFINE_TYPED_LINKEDLIST(ItemType, ListName, destructor_func) \
     typedef NodeChain ListName; \
     \
-    static inline void ListName##_init(ListName *list, Destructor destructor_func) \
+    static inline ListName ListName##_init(void) \
     { \
-        nodechain_init(list, sizeof(Type), destructor_func); \
+        return (ListName){NULL, NULL, 0, sizeof(ItemType), destructor_func}; \
     } \
     \
-    static inline void ListName##_free(ListName *list) \
+    static inline void ListName##_free(ListName *list_ptr) \
     { \
-        nodechain_free(list); \
+        nodechain_free(list_ptr); \
     } \
     \
-    static inline void ListName##_append(ListName *list, Type value) \
+    static inline void ListName##_append(ListName *list_ptr, ItemType value) \
     { \
-        nodechain_push_back(list, &value); \
+        nodechain_push_back(list_ptr, &value); \
     } \
     \
-    static inline void ListName##_prepend(ListName *list, Type value) \
+    static inline void ListName##_prepend(ListName *list_ptr, ItemType value) \
     { \
-        nodechain_push_front(list, &value); \
+        nodechain_push_front(list_ptr, &value); \
     } \
     \
-    static inline void ListName##_insert(ListName *list, Type value, ptrdiff_t index) \
+    static inline void ListName##_insert(ListName *list_ptr, ItemType value, ptrdiff_t index) \
     { \
-        nodechain_push_at(list, &value, index); \
+        nodechain_push_at(list_ptr, &value, index); \
     }
 #endif //DATA_STRUCTURES_LINKEDLIST_H
