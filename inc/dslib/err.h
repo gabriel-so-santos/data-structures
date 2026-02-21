@@ -1,0 +1,17 @@
+//
+// Created by Gabriel Souza on 21/02/2026.
+//
+
+#ifndef DATA_STRUCTURES_ERR_H
+#define DATA_STRUCTURES_ERR_H
+
+typedef enum
+{
+    DSLIB_SUCCESS = 0,
+    DSLIB_ERR_ALLOCATION_FAILED,
+    DSLIB_ERR_NULL_POINTER,
+    DSLIB_ERR_INDEX_OUT_OF_BOUNDS,
+    DSLIB_ERR_EMPTY_STRUCTURE,
+} dslib_err_t;
+
+#endif //DATA_STRUCTURES_ERR_H
