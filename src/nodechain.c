@@ -33,15 +33,26 @@ Node *nodechain_alloc(const void *value_ptr, const size_t value_size)
 
 NodeChain *nodechain_create(const size_t value_size, const Destructor destructor_func)
 {
-    NodeChain new_structure;
+    NodeChain *new_structure = malloc(sizeof(NodeChain) + value_size);
 
-    new_structure.head = NULL;
-    new_structure.tail = NULL;
-    new_structure.length = 0;
-    new_structure.value_size = value_size;
-    new_structure.destructor_func = destructor_func;
+    new_structure->head = NULL;
+    new_structure->tail = NULL;
+    new_structure->length = 0;
+    new_structure->value_size = value_size;
+    new_structure->destructor_func = destructor_func;
 
-    return &new_structure;
+    return new_structure;
+}
+
+
+size_t nodechain_length(const NodeChain *nodechain_ptr)
+{
+    return nodechain_ptr->length;
+}
+
+int nodechain_is_empty(const NodeChain *nodechain_ptr)
+{
+    return nodechain_ptr->length == 0;
 }
 
 
@@ -62,9 +73,7 @@ DSErrCode nodechain_free(NodeChain *nodechain_ptr)
         node = next;
     }
 
-    nodechain_ptr->head = NULL;
-    nodechain_ptr->tail = NULL;
-    nodechain_ptr->length = 0;
+    free(nodechain_ptr);
 
     return DS_SUCCESS;
 }
@@ -147,6 +156,34 @@ DSErrCode nodechain_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptr
     new_node->next = prev_node->next;
     prev_node->next = new_node;
     nodechain_ptr->length++;
+
+    return DS_SUCCESS;
+}
+
+
+DSErrCode nodechain_get_front(const NodeChain *nodechain_ptr, void *output_ptr)
+{
+    if (!nodechain_ptr || !output_ptr)
+        return DS_ERR_NULL_POINTER;
+
+    if (!nodechain_ptr->head)
+        return DS_ERR_EMPTY_STRUCTURE;
+
+    memcpy(output_ptr, nodechain_ptr->head->value, nodechain_ptr->value_size);
+
+    return DS_SUCCESS;
+}
+
+
+DSErrCode nodechain_get_back(const NodeChain *nodechain_ptr, void *output_ptr)
+{
+    if (!nodechain_ptr || !output_ptr)
+        return DS_ERR_NULL_POINTER;
+
+    if (!nodechain_ptr->tail)
+        return DS_ERR_EMPTY_STRUCTURE;
+
+    memcpy(output_ptr, nodechain_ptr->tail->value, nodechain_ptr->value_size);
 
     return DS_SUCCESS;
 }
