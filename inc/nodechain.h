@@ -15,14 +15,7 @@ typedef struct Node
 
 typedef void (*Destructor)(void *);
 
-typedef struct
-{
-    Node *head;
-    Node *tail;
-    size_t length;
-    size_t value_size;
-    Destructor destructor_func;
-} NodeChain;
+typedef struct NodeChain NodeChain;
 
 typedef enum
 {
@@ -33,8 +26,9 @@ typedef enum
     DS_ERR_INVALID_ARGUMENT = -4,
 } DSErrCode;
 
-
 Node *nodechain_alloc(const void *value_ptr, size_t value_size);
+
+NodeChain *nodechain_create(size_t value_size, Destructor destructor_func);
 
 DSErrCode nodechain_free(NodeChain *nodechain_ptr);
 

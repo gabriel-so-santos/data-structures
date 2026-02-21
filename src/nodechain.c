@@ -8,6 +8,17 @@
 
 #include "nodechain.h"
 
+typedef void (*Destructor)(void *);
+
+struct NodeChain
+{
+    Node *head;
+    Node *tail;
+    size_t length;
+    size_t value_size;
+    Destructor destructor_func;
+};
+
 
 Node *nodechain_alloc(const void *value_ptr, const size_t value_size)
 {
@@ -17,6 +28,20 @@ Node *nodechain_alloc(const void *value_ptr, const size_t value_size)
     memcpy(new_node->value, value_ptr, value_size);
     new_node->next = NULL;
     return new_node;
+}
+
+
+NodeChain *nodechain_create(const size_t value_size, const Destructor destructor_func)
+{
+    NodeChain new_structure;
+
+    new_structure.head = NULL;
+    new_structure.tail = NULL;
+    new_structure.length = 0;
+    new_structure.value_size = value_size;
+    new_structure.destructor_func = destructor_func;
+
+    return &new_structure;
 }
 
 

@@ -10,30 +10,30 @@
 #include "nodechain.h"
 
 #define DEFINE_TYPED_LINKEDLIST(ItemType, ListName, destructor_func) \
-    typedef NodeChain ListName; \
+    typedef NodeChain* ListName; \
     \
-    static inline ListName ListName##_init(void) \
+    static inline ListName ListName##_create(void) \
     { \
-        return (ListName){NULL, NULL, 0, sizeof(ItemType), destructor_func}; \
+        return nodechain_create(sizeof(ItemType), destructor_func); \
     } \
     \
-    static inline DSErrCode ListName##_free(ListName *list_ptr) \
+    static inline DSErrCode ListName##_free(ListName list) \
     { \
-        return nodechain_free(list_ptr); \
+        return nodechain_free(list); \
     } \
     \
-    static inline DSErrCode ListName##_append(ListName *list_ptr, ItemType value) \
+    static inline DSErrCode ListName##_append(ListName list, ItemType value) \
     { \
-        return nodechain_push_back(list_ptr, &value); \
+        return nodechain_push_back(list, &value); \
     } \
     \
-    static inline DSErrCode ListName##_prepend(ListName *list_ptr, ItemType value) \
+    static inline DSErrCode ListName##_prepend(ListName list, ItemType value) \
     { \
-        return nodechain_push_front(list_ptr, &value); \
+        return nodechain_push_front(list, &value); \
     } \
     \
-    static inline DSErrCode ListName##_insert(ListName *list_ptr, ItemType value, ptrdiff_t index) \
+    static inline DSErrCode ListName##_insert(ListName list, ItemType value, ptrdiff_t index) \
     { \
-        return nodechain_push_at(list_ptr, &value, index); \
+        return nodechain_push_at(list, &value, index); \
     }
 #endif //DATA_STRUCTURES_LINKEDLIST_H
