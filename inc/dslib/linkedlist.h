@@ -10,7 +10,7 @@
 #include "dslib/err.h"
 
 #define DEFINE_TYPED_LINKEDLIST(Type, ListName, destructor_func) \
-    typedef NodeChain* ListName; \
+    typedef _NodeChain * const ListName; \
     \
     static inline ListName new_##ListName(void) \
     { return _dslib_nc_alloc(sizeof(Type), destructor_func); } \

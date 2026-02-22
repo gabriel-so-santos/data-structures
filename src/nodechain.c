@@ -8,6 +8,8 @@
 
 #include "internal/nodechain.h"
 
+typedef _NodeChain NodeChain;
+
 typedef struct Node
 {
     struct Node *next;

@@ -8,8 +8,8 @@
 #include <stddef.h>
 #include "internal/nodechain.h"
 
-size_t dslib_length_of(const NodeChain *nodechain_ptr);
+size_t dslib_length_of(const _NodeChain *nodechain_ptr);
 
-int dslib_is_empty(const NodeChain *nodechain_ptr);
+int dslib_is_empty(const _NodeChain *nodechain_ptr);
 
 #endif //DATA_STRUCTURES_CORE_H
