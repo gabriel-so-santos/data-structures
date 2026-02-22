@@ -6,16 +6,16 @@
 #define DATA_STRUCTURES_LINKEDLIST_H
 
 #include <stddef.h>
-#include "dslib/collect_utils.h"
+#include "dslib/core.h"
 #include "dslib/err.h"
 
 #define DEFINE_TYPED_LINKEDLIST(Type, ListName, destructor_func) \
     typedef NodeChain* ListName; \
     \
-    static inline ListName ListName##_create(void) \
+    static inline ListName new_##ListName(void) \
     { return _dslib_nc_alloc(sizeof(Type), destructor_func); } \
     \
-    static inline dslib_err_t ListName##_destroy(ListName list) \
+    static inline dslib_err_t ListName##_free(ListName list) \
     { return _dslib_nc_free(list); } \
     \
     static inline dslib_err_t ListName##_first(ListName list, Type *output_ptr) \

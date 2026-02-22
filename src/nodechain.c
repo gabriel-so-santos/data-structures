@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "dslib/nodechain.h"
+#include "internal/nodechain.h"
 
 typedef struct Node
 {
@@ -47,7 +47,8 @@ Node *_node_alloc(const void *value_ptr, const size_t value_size)
 
 NodeChain *_dslib_nc_alloc(const size_t value_size, const Destructor destructor_func)
 {
-    NodeChain *new_structure = malloc(sizeof(NodeChain) + value_size);
+    NodeChain *new_structure = malloc(sizeof(NodeChain));
+    if (!new_structure) return NULL;
 
     new_structure->head = NULL;
     new_structure->tail = NULL;
@@ -82,7 +83,7 @@ dslib_err_t _dslib_nc_free(NodeChain *nodechain_ptr)
 }
 
 
-dslib_err_t _dslib_push_front(NodeChain *nodechain_ptr, const void *value_ptr)
+dslib_err_t _dslib_nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr)
 {
     if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
 
@@ -101,7 +102,7 @@ dslib_err_t _dslib_push_front(NodeChain *nodechain_ptr, const void *value_ptr)
 }
 
 
-dslib_err_t _dslib_push_back(NodeChain *nodechain_ptr, const void *value_ptr)
+dslib_err_t _dslib_nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr)
 {
     if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
 
@@ -125,7 +126,7 @@ dslib_err_t _dslib_push_back(NodeChain *nodechain_ptr, const void *value_ptr)
 }
 
 
-dslib_err_t _dslib_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptrdiff_t index)
+dslib_err_t _dslib_nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptrdiff_t index)
 {
     if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
 
@@ -142,11 +143,11 @@ dslib_err_t _dslib_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptrd
 
     // Insert at beginning
     if (unsigned_index == 0)
-        return _dslib_push_front(nodechain_ptr, value_ptr);
+        return _dslib_nc_push_front(nodechain_ptr, value_ptr);
 
     // Insert at end
     if (unsigned_index == length)
-        return _dslib_push_back(nodechain_ptr, value_ptr);
+        return _dslib_nc_push_back(nodechain_ptr, value_ptr);
 
     // Insert in middle
     Node *prev_node = nodechain_ptr->head;
@@ -164,7 +165,7 @@ dslib_err_t _dslib_push_at(NodeChain *nodechain_ptr, const void *value_ptr, ptrd
 }
 
 
-dslib_err_t _dslib_get_front(const NodeChain *nodechain_ptr, void *output_ptr)
+dslib_err_t _dslib_nc_get_front(const NodeChain *nodechain_ptr, void *output_ptr)
 {
     if (!nodechain_ptr || !output_ptr)
         return DSLIB_ERR_NULL_POINTER;
@@ -178,7 +179,7 @@ dslib_err_t _dslib_get_front(const NodeChain *nodechain_ptr, void *output_ptr)
 }
 
 
-dslib_err_t _dslib_get_back(const NodeChain *nodechain_ptr, void *output_ptr)
+dslib_err_t _dslib_nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr)
 {
     if (!nodechain_ptr || !output_ptr)
         return DSLIB_ERR_NULL_POINTER;
