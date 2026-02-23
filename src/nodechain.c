@@ -27,11 +27,13 @@ struct NodeChain
 
 size_t dslib_length_of(const NodeChain *nodechain_ptr)
 {
+    if (!nodechain_ptr) return 0;
     return nodechain_ptr->length;
 }
 
 int dslib_is_empty(const NodeChain *nodechain_ptr)
 {
+    if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
     return nodechain_ptr->length == 0;
 }
 
