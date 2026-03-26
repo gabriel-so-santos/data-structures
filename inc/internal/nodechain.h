@@ -6,24 +6,31 @@
 #define DATA_STRUCTURES_NODECHAIN_H
 
 #include <stddef.h>
-#include "dslib/err.h"
+#include <libds/err.h>
 
-typedef struct NodeChain _NodeChain;
+typedef struct NodeChain NodeChain;
 
 typedef void (*Destructor)(void *);
 
-_NodeChain *_dslib_nc_alloc(void);
+NodeChain *
+ds__nc_alloc(void);
 
-dslib_err_t _dslib_nc_free(_NodeChain **nodechain_dptr, Destructor destructor);
+ds_err_t
+ds__nc_free(NodeChain **nodechain_dptr, Destructor destructor);
 
-dslib_err_t _dslib_nc_push_front(_NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
+ds_err_t
+ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
 
-dslib_err_t _dslib_nc_push_back(_NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
+ds_err_t
+ds__nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
 
-dslib_err_t _dslib_nc_push_at(_NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size, long long index);
+ds_err_t
+ds__nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size, long long index);
 
-dslib_err_t _dslib_nc_get_front(const _NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
+ds_err_t
+ds__nc_get_front(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
 
-dslib_err_t _dslib_nc_get_back(const _NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
+ds_err_t
+ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
 
 #endif //DATA_STRUCTURES_NODECHAIN_H

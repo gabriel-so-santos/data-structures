@@ -6,17 +6,19 @@
 #define DATA_STRUCTURES_CORE_H
 
 #include <stddef.h>
-#include "internal/nodechain.h"
+#include <internal/nodechain.h>
 
 typedef struct TypeWrapper
 {
     const size_t value_size;
     const Destructor destructor;
-    _NodeChain *nodechain_ptr;
+    NodeChain *nodechain_ptr;
 } TypeWrapper;
 
-size_t dslib_length_of(const _NodeChain *nodechain_ptr);
+size_t
+ds__length_of(const NodeChain *nodechain_ptr);
 
-int dslib_is_empty(const _NodeChain *nodechain_ptr);
+int
+ds__is_empty(const NodeChain *nodechain_ptr);
 
 #endif //DATA_STRUCTURES_CORE_H

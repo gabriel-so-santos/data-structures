@@ -6,9 +6,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "internal/nodechain.h"
-
-typedef _NodeChain NodeChain;
+#include <internal/nodechain.h>
 
 typedef struct Node
 {
@@ -23,20 +21,23 @@ struct NodeChain
     size_t length;
 };
 
-size_t dslib_length_of(const NodeChain *nodechain_ptr)
+size_t
+ds__length_of(const NodeChain *nodechain_ptr)
 {
     if (!nodechain_ptr) return 0;
     return nodechain_ptr->length;
 }
 
-int dslib_is_empty(const NodeChain *nodechain_ptr)
+int
+ds__is_empty(const NodeChain *nodechain_ptr)
 {
-    if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
+    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
     return nodechain_ptr->length == 0;
 }
 
 
-Node *_node_alloc(const void *value_ptr, const size_t value_size)
+Node *
+ds__node_alloc(const void *value_ptr, const size_t value_size)
 {
     Node *new_node = malloc(sizeof(Node) + value_size);
     if (!new_node) return NULL;
@@ -47,7 +48,8 @@ Node *_node_alloc(const void *value_ptr, const size_t value_size)
 }
 
 
-NodeChain *_dslib_nc_alloc(void)
+NodeChain *
+ds__nc_alloc(void)
 {
     NodeChain *new_structure = malloc(sizeof(NodeChain));
     if (!new_structure) return NULL;
@@ -60,9 +62,10 @@ NodeChain *_dslib_nc_alloc(void)
 }
 
 
-dslib_err_t _dslib_nc_free(NodeChain **nodechain_dptr, const Destructor destructor)
+ds_err_t
+ds__nc_free(NodeChain **nodechain_dptr, const Destructor destructor)
 {
-    if (!nodechain_dptr || !*nodechain_dptr) return DSLIB_ERR_NULL_POINTER;
+    if (!nodechain_dptr || !*nodechain_dptr) return LIBDS_ERR_NULL_POINTER;
 
     NodeChain *nodechain_ptr = *nodechain_dptr;
 
@@ -82,16 +85,17 @@ dslib_err_t _dslib_nc_free(NodeChain **nodechain_dptr, const Destructor destruct
     free(nodechain_ptr);
     *nodechain_dptr = NULL;
 
-    return DSLIB_SUCCESS;
+    return LIBDS_SUCCESS;
 }
 
 
-dslib_err_t _dslib_nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
+ds_err_t
+ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
 {
-    if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
+    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
-    Node *new_node = _node_alloc(value_ptr, value_size);
-    if (!new_node) return DSLIB_ERR_ALLOCATION_FAILED;
+    Node *new_node = ds__node_alloc(value_ptr, value_size);
+    if (!new_node) return LIBDS_ERR_ALLOCATION_FAILED;
 
     new_node->next = nodechain_ptr->head;
 
@@ -101,17 +105,17 @@ dslib_err_t _dslib_nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr
     nodechain_ptr->head = new_node;
     nodechain_ptr->length++;
 
-    return DSLIB_SUCCESS;
+    return LIBDS_SUCCESS;
 }
 
 
-dslib_err_t
-_dslib_nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
+ds_err_t
+ds__nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
 {
-    if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
+    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
-    Node *new_node = _node_alloc(value_ptr, value_size);
-    if (!new_node) return DSLIB_ERR_ALLOCATION_FAILED;
+    Node *new_node = ds__node_alloc(value_ptr, value_size);
+    if (!new_node) return LIBDS_ERR_ALLOCATION_FAILED;
 
     if (!nodechain_ptr->head)
     {
@@ -126,13 +130,14 @@ _dslib_nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, const size_
 
     nodechain_ptr->length++;
 
-    return DSLIB_SUCCESS;
+    return LIBDS_SUCCESS;
 }
 
 
-dslib_err_t _dslib_nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size, long long index)
+ds_err_t
+ds__nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size, long long index)
 {
-    if (!nodechain_ptr) return DSLIB_ERR_NULL_POINTER;
+    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
     const size_t length = nodechain_ptr->length;
 
@@ -141,57 +146,59 @@ dslib_err_t _dslib_nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, c
         index += (long long) length;
 
     if (index < 0 || (size_t) index > length)
-        return DSLIB_ERR_INDEX_OUT_OF_BOUNDS;
+        return LIBDS_ERR_INDEX_OUT_OF_BOUNDS;
 
     const size_t unsigned_index = (size_t) index;
 
     // Insert at beginning
     if (unsigned_index == 0)
-        return _dslib_nc_push_front(nodechain_ptr, value_ptr, value_size);
+        return ds__nc_push_front(nodechain_ptr, value_ptr, value_size);
 
     // Insert at end
     if (unsigned_index == length)
-        return _dslib_nc_push_back(nodechain_ptr, value_ptr, value_size);
+        return ds__nc_push_back(nodechain_ptr, value_ptr, value_size);
 
     // Insert in middle
     Node *prev_node = nodechain_ptr->head;
     for (size_t i = 0; i < unsigned_index - 1; i++)
         prev_node = prev_node->next;
 
-    Node *new_node = _node_alloc(value_ptr, value_size);
-    if (!new_node) return DSLIB_ERR_ALLOCATION_FAILED;
+    Node *new_node = ds__node_alloc(value_ptr, value_size);
+    if (!new_node) return LIBDS_ERR_ALLOCATION_FAILED;
 
     new_node->next = prev_node->next;
     prev_node->next = new_node;
     nodechain_ptr->length++;
 
-    return DSLIB_SUCCESS;
+    return LIBDS_SUCCESS;
 }
 
 
-dslib_err_t _dslib_nc_get_front(const NodeChain *nodechain_ptr, void *output_ptr, const size_t output_size)
+ds_err_t
+ds__nc_get_front(const NodeChain *nodechain_ptr, void *output_ptr, const size_t output_size)
 {
     if (!nodechain_ptr || !output_ptr)
-        return DSLIB_ERR_NULL_POINTER;
+        return LIBDS_ERR_NULL_POINTER;
 
     if (!nodechain_ptr->head)
-        return DSLIB_ERR_EMPTY_STRUCTURE;
+        return LIBDS_ERR_EMPTY_STRUCTURE;
 
     memcpy(output_ptr, nodechain_ptr->head->value, output_size);
 
-    return DSLIB_SUCCESS;
+    return LIBDS_SUCCESS;
 }
 
 
-dslib_err_t _dslib_nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, const size_t output_size)
+ds_err_t
+ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, const size_t output_size)
 {
     if (!nodechain_ptr || !output_ptr)
-        return DSLIB_ERR_NULL_POINTER;
+        return LIBDS_ERR_NULL_POINTER;
 
     if (!nodechain_ptr->tail)
-        return DSLIB_ERR_EMPTY_STRUCTURE;
+        return LIBDS_ERR_EMPTY_STRUCTURE;
 
     memcpy(output_ptr, nodechain_ptr->tail->value, output_size);
 
-    return DSLIB_SUCCESS;
+    return LIBDS_SUCCESS;
 }

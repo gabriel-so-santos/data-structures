@@ -1,0 +1,17 @@
+//
+// Created by Gabriel Souza on 21/02/2026.
+//
+
+#ifndef DATA_STRUCTURES_ERR_H
+#define DATA_STRUCTURES_ERR_H
+
+typedef enum
+{
+    LIBDS_SUCCESS = 0,
+    LIBDS_ERR_ALLOCATION_FAILED,
+    LIBDS_ERR_NULL_POINTER,
+    LIBDS_ERR_INDEX_OUT_OF_BOUNDS,
+    LIBDS_ERR_EMPTY_STRUCTURE,
+} ds_err_t;
+
+#endif //DATA_STRUCTURES_ERR_H
