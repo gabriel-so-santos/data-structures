@@ -6,6 +6,7 @@
 #define DATA_STRUCTURES_CORE_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <internal/nodechain.h>
 
 typedef struct TypeWrapper
@@ -18,7 +19,7 @@ typedef struct TypeWrapper
 size_t
 ds__length_of(const NodeChain *nodechain_ptr);
 
-int
+bool
 ds__is_empty(const NodeChain *nodechain_ptr);
 
 #endif //DATA_STRUCTURES_CORE_H

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <internal/nodechain.h>
 
@@ -28,10 +29,10 @@ ds__length_of(const NodeChain *nodechain_ptr)
     return nodechain_ptr->length;
 }
 
-int
+bool
 ds__is_empty(const NodeChain *nodechain_ptr)
 {
-    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
+    if (!nodechain_ptr) return true;
     return nodechain_ptr->length == 0;
 }
 
