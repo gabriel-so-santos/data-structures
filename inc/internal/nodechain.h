@@ -18,6 +18,12 @@ ds__nc_alloc(void);
 ds_err_t
 ds__nc_free(NodeChain **nodechain_dptr, Destructor destructor);
 
+size_t
+ds__nc_length_of(const NodeChain *nodechain_ptr);
+
+bool
+ds__nc_is_empty(const NodeChain *nodechain_ptr);
+
 ds_err_t
 ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
 

@@ -16,10 +16,4 @@ typedef struct TypeWrapper
     NodeChain *nodechain_ptr;
 } TypeWrapper;
 
-size_t
-ds__length_of(const NodeChain *nodechain_ptr);
-
-bool
-ds__is_empty(const NodeChain *nodechain_ptr);
-
 #endif //DATA_STRUCTURES_CORE_H

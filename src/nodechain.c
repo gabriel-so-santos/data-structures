@@ -23,14 +23,14 @@ struct NodeChain
 };
 
 size_t
-ds__length_of(const NodeChain *nodechain_ptr)
+ds__nc_length_of(const NodeChain *nodechain_ptr)
 {
     if (!nodechain_ptr) return 0;
     return nodechain_ptr->length;
 }
 
 bool
-ds__is_empty(const NodeChain *nodechain_ptr)
+ds__nc_is_empty(const NodeChain *nodechain_ptr)
 {
     if (!nodechain_ptr) return true;
     return nodechain_ptr->length == 0;
