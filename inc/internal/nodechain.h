@@ -39,4 +39,10 @@ ds__nc_get_front(const NodeChain *nodechain_ptr, void *output_ptr, size_t output
 ds_err_t
 ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
 
+ds_err_t
+ds__pop_front(NodeChain *nodechain_ptr, Destructor destructor);
+
+ds_err_t
+ds__pop_back(NodeChain *nodechain_ptr, Destructor destructor);
+
 #endif //DATA_STRUCTURES_NODECHAIN_H

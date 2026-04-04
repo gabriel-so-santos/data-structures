@@ -19,6 +19,7 @@ struct NodeChain
 {
     Node *head;
     Node *tail;
+    Node *tail_prev;
     size_t length;
 };
 
@@ -200,6 +201,68 @@ ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, const size_t o
         return LIBDS_ERR_EMPTY_STRUCTURE;
 
     memcpy(output_ptr, nodechain_ptr->tail->value, output_size);
+
+    return LIBDS_SUCCESS;
+}
+
+ds_err_t
+ds__pop_front(NodeChain *nodechain_ptr, const Destructor destructor)
+{
+    if (!nodechain_ptr)
+        return LIBDS_ERR_NULL_POINTER;
+
+    if (!nodechain_ptr->head)
+        return LIBDS_ERR_EMPTY_STRUCTURE;
+
+    Node *old_head = nodechain_ptr->head;
+    nodechain_ptr->head = old_head->next;
+
+    // If it's now empty, tail must be NULL
+    if (!nodechain_ptr->head)
+        nodechain_ptr->tail = NULL;
+
+    if (destructor)
+        destructor(old_head->value);
+
+    free(old_head);
+    nodechain_ptr->length--;
+
+    return LIBDS_SUCCESS;
+}
+
+ds_err_t
+ds__pop_back(NodeChain *nodechain_ptr, const Destructor destructor)
+{
+    if (!nodechain_ptr)
+        return LIBDS_ERR_NULL_POINTER;
+
+    if (!nodechain_ptr->tail)
+        return LIBDS_ERR_EMPTY_STRUCTURE;
+
+    Node *old_tail = nodechain_ptr->tail;
+
+    // One element case
+    if (nodechain_ptr->head == nodechain_ptr->tail)
+    {
+        nodechain_ptr->head = NULL;
+        nodechain_ptr->tail = NULL;
+    }
+    else
+    {
+        Node *tail_prev = nodechain_ptr->head;
+
+        while (tail_prev->next != old_tail)
+            tail_prev = tail_prev->next;
+
+        tail_prev->next = NULL;
+        nodechain_ptr->tail = tail_prev;
+    }
+
+    if (destructor)
+        destructor(old_tail->value);
+
+    free(old_tail);
+    nodechain_ptr->length--;
 
     return LIBDS_SUCCESS;
 }
