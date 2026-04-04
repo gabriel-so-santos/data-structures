@@ -40,6 +40,9 @@ ds_err_t
 ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
 
 ds_err_t
+ds__nc_get_at(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size, long long index);
+
+ds_err_t
 ds__pop_front(NodeChain *nodechain_ptr, Destructor destructor);
 
 ds_err_t

@@ -205,6 +205,39 @@ ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, const size_t o
     return LIBDS_SUCCESS;
 }
 
+
+ds_err_t
+ds__nc_get_at(const NodeChain *nodechain_ptr, void *output_ptr, const size_t output_size, long long index)
+{
+    if (!nodechain_ptr || !output_ptr)
+        return LIBDS_ERR_NULL_POINTER;
+
+    const size_t length = nodechain_ptr->length;
+
+    // Negative index counts from the tail
+    if (index < 0)
+        index += (long long) length; // Subtract value from length
+
+    if (index < 0 || (size_t) index >= length)
+        return LIBDS_ERR_INDEX_OUT_OF_BOUNDS;
+
+    const size_t unsigned_index = (size_t) index;
+
+    if (unsigned_index == 0)
+        return ds__nc_get_front(nodechain_ptr, output_ptr, output_size);
+
+    if (unsigned_index == length - 1)
+        return ds__nc_get_back(nodechain_ptr, output_ptr, output_size);
+
+    const Node *node = nodechain_ptr->head;
+    for (size_t i = 0; i < unsigned_index; i++)
+        node = node->next;
+
+    memcpy(output_ptr, node->value, output_size);
+
+    return LIBDS_SUCCESS;
+}
+
 ds_err_t
 ds__pop_front(NodeChain *nodechain_ptr, const Destructor destructor)
 {
@@ -229,6 +262,7 @@ ds__pop_front(NodeChain *nodechain_ptr, const Destructor destructor)
 
     return LIBDS_SUCCESS;
 }
+
 
 ds_err_t
 ds__pop_back(NodeChain *nodechain_ptr, const Destructor destructor)
