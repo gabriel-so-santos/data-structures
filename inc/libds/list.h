@@ -62,6 +62,14 @@
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
+    ds_##ListName##_get_at(ds_##ListName##_t list, Type *output_ptr, long long index)\
+    {                                                                           \
+        DS__CHECK_ERR(                                                          \
+            ds__nc_get_at(list.nodechain_ptr, output_ptr, list.value_size, index)\
+        );                                                                      \
+    }                                                                           \
+                                                                                \
+    static inline ds_err_t                                                      \
     ds_##ListName##_append(ds_##ListName##_t list, Type value)                  \
     {                                                                           \
         DS__CHECK_ERR(                                                          \
