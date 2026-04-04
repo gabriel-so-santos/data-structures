@@ -25,10 +25,10 @@
     }                                                                                                                  \
                                                                                                                        \
     static inline ds_err_t                                                                                             \
-    ds_##ListName##_destroy(ds_##ListName##_t list)                                                                    \
+    ds_##ListName##_destroy(ds_##ListName##_t *list)                                                                    \
     {                                                                                                                  \
         DS__CHECK_ERR(                                                                                                 \
-            ds__nc_free(&list.nodechain_ptr, list.destructor)                                                          \
+            ds__nc_free(&list->nodechain_ptr, list->destructor)                                                          \
         );                                                                                                             \
     }                                                                                                                  \
                                                                                                                        \
