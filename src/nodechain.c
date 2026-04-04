@@ -24,14 +24,14 @@ struct NodeChain
 };
 
 size_t
-ds__nc_length_of(const NodeChain *nodechain_ptr)
+ds__nc_length(const NodeChain *nodechain_ptr)
 {
     if (!nodechain_ptr) return 0;
     return nodechain_ptr->length;
 }
 
 bool
-ds__nc_is_empty(const NodeChain *nodechain_ptr)
+ds__nc_isempty(const NodeChain *nodechain_ptr)
 {
     if (!nodechain_ptr) return true;
     return nodechain_ptr->length == 0;
@@ -239,7 +239,7 @@ ds__nc_get_at(const NodeChain *nodechain_ptr, void *output_ptr, const size_t out
 }
 
 ds_err_t
-ds__pop_front(NodeChain *nodechain_ptr, const Destructor destructor)
+ds__nc_drop_front(NodeChain *nodechain_ptr, const Destructor destructor)
 {
     if (!nodechain_ptr)
         return LIBDS_ERR_NULL_POINTER;
@@ -265,7 +265,7 @@ ds__pop_front(NodeChain *nodechain_ptr, const Destructor destructor)
 
 
 ds_err_t
-ds__pop_back(NodeChain *nodechain_ptr, const Destructor destructor)
+ds__nc_drop_back(NodeChain *nodechain_ptr, const Destructor destructor)
 {
     if (!nodechain_ptr)
         return LIBDS_ERR_NULL_POINTER;

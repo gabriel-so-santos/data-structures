@@ -34,15 +34,15 @@
     }                                                                           \
                                                                                 \
     static inline size_t                                                        \
-    ds_##Name##_length_of(ds_##ListName##_t list)                               \
+    ds_##Name##_length(ds_##Name##_t list)                                      \
     {                                                                           \
-        return ds__nc_length_of(list.nodechain_ptr);                            \
+        return ds__nc_length(list.nodechain_ptr);                               \
     }                                                                           \
                                                                                 \
     static inline bool                                                          \
-    ds_##Name##_is_empty(ds_##Name##_t list)                                    \
+    ds_##Name##_isempty(ds_##Name##_t list)                                     \
     {                                                                           \
-        return ds__nc_is_empty(list.nodechain_ptr);                             \
+        return ds__nc_isempty(list.nodechain_ptr);                              \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
@@ -62,7 +62,7 @@
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
-    ds_##Name##_get_at(ds_##ListName##_t list, Type *output_ptr, long long index)\
+    ds_##Name##_get(ds_##Name##_t list, Type *output_ptr, long long index)      \
     {                                                                           \
         DS__CHECK_ERR(                                                          \
             ds__nc_get_at(                                                      \
@@ -99,17 +99,17 @@
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
-    ds_##Name##_remove_first(ds_##ListName##_t list)                            \
+    ds_##Name##_dropfirst(ds_##Name##_t list)                                   \
     {                                                                           \
         DS__CHECK_ERR(                                                          \
-            ds__pop_front(list.nodechain_ptr, list.destructor)                  \
+            ds__nc_drop_front(list.nodechain_ptr, list.destructor)              \
         );                                                                      \
     }                                                                           \
     static inline ds_err_t                                                      \
-    ds_##Name##_remove_last(ds_##ListName##_t list)                             \
+    ds_##Name##_droplast(ds_##Name##_t list)                                    \
     {                                                                           \
         DS__CHECK_ERR(                                                          \
-            ds__pop_back(list.nodechain_ptr, list.destructor)                   \
+            ds__nc_drop_back(list.nodechain_ptr, list.destructor)               \
         );                                                                      \
     }
 

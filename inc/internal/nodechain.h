@@ -19,10 +19,10 @@ ds_err_t
 ds__nc_free(NodeChain **nodechain_dptr, Destructor destructor);
 
 size_t
-ds__nc_length_of(const NodeChain *nodechain_ptr);
+ds__nc_length(const NodeChain *nodechain_ptr);
 
 bool
-ds__nc_is_empty(const NodeChain *nodechain_ptr);
+ds__nc_isempty(const NodeChain *nodechain_ptr);
 
 ds_err_t
 ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
@@ -43,9 +43,9 @@ ds_err_t
 ds__nc_get_at(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size, long long index);
 
 ds_err_t
-ds__pop_front(NodeChain *nodechain_ptr, Destructor destructor);
+ds__nc_drop_front(NodeChain *nodechain_ptr, Destructor destructor);
 
 ds_err_t
-ds__pop_back(NodeChain *nodechain_ptr, Destructor destructor);
+ds__nc_drop_back(NodeChain *nodechain_ptr, Destructor destructor);
 
 #endif //DATA_STRUCTURES_NODECHAIN_H
