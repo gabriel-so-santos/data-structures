@@ -83,6 +83,21 @@
         DS__CHECK_ERR(                                                          \
             ds__nc_push_at(list.nodechain_ptr, &value, list.value_size, index)  \
         );                                                                      \
+    }                                                                           \
+                                                                                \
+    static inline ds_err_t                                                      \
+    ds_##ListName##_remove_first(ds_##ListName##_t list)                        \
+    {                                                                           \
+        DS__CHECK_ERR(                                                          \
+            ds__pop_front(list.nodechain_ptr, list.destructor)                  \
+        );                                                                      \
+    }                                                                           \
+    static inline ds_err_t                                                      \
+    ds_##ListName##_remove_last(ds_##ListName##_t list)                         \
+    {                                                                           \
+        DS__CHECK_ERR(                                                          \
+            ds__pop_back(list.nodechain_ptr, list.destructor)                   \
+        );                                                                      \
     }
 
 #endif //DATA_STRUCTURES_LIST_H
