@@ -32,6 +32,14 @@
             ds__nc_free(&list->nodechain_ptr, list->destructor)                 \
         );                                                                      \
     }                                                                           \
+    \
+    static inline ds_err_t\
+    ds_##Name##_clear(ds_##Name##_t list)\
+    {\
+        return DS_CHECK(\
+            ds__nc_clear(list.nodechain_ptr, list.destructor)\
+        );\
+    }  \
                                                                                 \
     static inline size_t                                                        \
     ds_##Name##_length(ds_##Name##_t list)                                      \
