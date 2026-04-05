@@ -118,7 +118,7 @@
     ds_##Name##_remove(ds_##Name##_t list, long long index)                     \
     {                                                                           \
         return DS_CHECK(                                                        \
-            ds_nc_drop_at(list.nodechain_ptr, list.destructor, index)           \
+            ds__nc_drop_at(list.nodechain_ptr, list.destructor, index)          \
         );                                                                      \
     }
 
