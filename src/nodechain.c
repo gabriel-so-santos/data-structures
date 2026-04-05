@@ -68,7 +68,19 @@ ds__nc_free(NodeChain **nodechain_dptr, const Destructor destructor)
 {
     if (!nodechain_dptr || !*nodechain_dptr) return LIBDS_ERR_NULL_POINTER;
 
-    NodeChain *nodechain_ptr = *nodechain_dptr;
+    ds__nc_clear(*nodechain_dptr, destructor);
+
+    free(*nodechain_dptr);
+    *nodechain_dptr = NULL;
+
+    return LIBDS_SUCCESS;
+}
+
+
+ds_err_t
+ds__nc_clear(NodeChain *nodechain_ptr, const Destructor destructor)
+{
+    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
     Node *node = nodechain_ptr->head;
 
@@ -83,8 +95,9 @@ ds__nc_free(NodeChain **nodechain_dptr, const Destructor destructor)
         node = next;
     }
 
-    free(nodechain_ptr);
-    *nodechain_dptr = NULL;
+    nodechain_ptr->head = NULL;
+    nodechain_ptr->tail = NULL;
+    nodechain_ptr->length = 0;
 
     return LIBDS_SUCCESS;
 }

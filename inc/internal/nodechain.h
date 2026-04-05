@@ -18,6 +18,9 @@ ds__nc_alloc(void);
 ds_err_t
 ds__nc_free(NodeChain **nodechain_dptr, Destructor destructor);
 
+ds_err_t
+ds__nc_clear(NodeChain *nodechain_ptr, Destructor destructor);
+
 size_t
 ds__nc_length(const NodeChain *nodechain_ptr);
 
