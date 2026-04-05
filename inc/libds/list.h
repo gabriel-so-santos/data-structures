@@ -28,7 +28,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_destroy(ds_##Name##_t *list)                                    \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_free(&list->nodechain_ptr, list->destructor)                 \
         );                                                                      \
     }                                                                           \
@@ -48,7 +48,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_first(ds_##Name##_t list, Type *output_ptr)                     \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_get_front(list.nodechain_ptr, output_ptr, list.value_size)   \
         );                                                                      \
     }                                                                           \
@@ -56,7 +56,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_last(ds_##Name##_t list, Type *output_ptr)                      \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_get_back(list.nodechain_ptr, output_ptr, list.value_size)    \
         );                                                                      \
     }                                                                           \
@@ -64,7 +64,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_get(ds_##Name##_t list, Type *output_ptr, long long index)      \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_get_at(                                                      \
                 list.nodechain_ptr,                                             \
                 output_ptr,                                                     \
@@ -77,7 +77,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_prepend(ds_##Name##_t list, Type value)                         \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_push_front(list.nodechain_ptr, &value, list.value_size)      \
         );                                                                      \
     }                                                                           \
@@ -85,7 +85,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_append(ds_##Name##_t list, Type value)                          \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_push_back(list.nodechain_ptr, &value, list.value_size)       \
         );                                                                      \
     }                                                                           \
@@ -93,7 +93,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_insert(ds_##Name##_t list, Type value, long long index)         \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_push_at(list.nodechain_ptr, &value, list.value_size, index)  \
         );                                                                      \
     }                                                                           \
@@ -101,7 +101,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_dropfirst(ds_##Name##_t list)                                   \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_drop_front(list.nodechain_ptr, list.destructor)              \
         );                                                                      \
     }                                                                           \
@@ -109,7 +109,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_droplast(ds_##Name##_t list)                                    \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds__nc_drop_back(list.nodechain_ptr, list.destructor)               \
         );                                                                      \
     }                                                                           \
@@ -117,7 +117,7 @@
     static inline ds_err_t                                                      \
     ds_##Name##_remove(ds_##Name##_t list, long long index)                     \
     {                                                                           \
-        DS__CHECK_ERR(                                                          \
+        return DS_CHECK(                                                        \
             ds_nc_drop_at(list.nodechain_ptr, list.destructor, index)           \
         );                                                                      \
     }
