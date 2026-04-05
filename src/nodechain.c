@@ -19,7 +19,6 @@ struct NodeChain
 {
     Node *head;
     Node *tail;
-    Node *tail_prev;
     size_t length;
 };
 
@@ -238,6 +237,7 @@ ds__nc_get_at(const NodeChain *nodechain_ptr, void *output_ptr, const size_t out
     return LIBDS_SUCCESS;
 }
 
+
 ds_err_t
 ds__nc_drop_front(NodeChain *nodechain_ptr, const Destructor destructor)
 {
@@ -296,6 +296,50 @@ ds__nc_drop_back(NodeChain *nodechain_ptr, const Destructor destructor)
         destructor(old_tail->value);
 
     free(old_tail);
+    nodechain_ptr->length--;
+
+    return LIBDS_SUCCESS;
+}
+
+
+ds_err_t
+ds__nc_drop_at(NodeChain *nodechain_ptr, const Destructor destructor, long long index)
+{
+    if (!nodechain_ptr)
+        return LIBDS_ERR_NULL_POINTER;
+
+    if (!nodechain_ptr->head)
+        return LIBDS_ERR_EMPTY_STRUCTURE;
+
+    const size_t length = nodechain_ptr->length;
+
+    // Negative index counts from the tail
+    if (index < 0)
+        index += (long long) length; // Subtract value from length
+
+    if (index < 0 || (size_t) index >= length)
+        return LIBDS_ERR_INDEX_OUT_OF_BOUNDS;
+
+    const size_t unsigned_index = (size_t) index;
+
+    if (unsigned_index == 0)
+        return ds__nc_drop_front(nodechain_ptr, destructor);
+
+    if (unsigned_index == length - 1)
+        return ds__nc_drop_back(nodechain_ptr, destructor);
+
+    Node *prev_node = nodechain_ptr->head;
+    for (size_t i = 0; i < unsigned_index - 1; i++)
+        prev_node = prev_node->next;
+
+    Node *node = prev_node->next;
+
+    prev_node->next = node->next;
+
+    if (destructor)
+        destructor(node->value);
+
+    free(node);
     nodechain_ptr->length--;
 
     return LIBDS_SUCCESS;

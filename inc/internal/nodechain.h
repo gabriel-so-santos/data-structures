@@ -48,4 +48,7 @@ ds__nc_drop_front(NodeChain *nodechain_ptr, Destructor destructor);
 ds_err_t
 ds__nc_drop_back(NodeChain *nodechain_ptr, Destructor destructor);
 
+ds_err_t
+ds__nc_drop_at(NodeChain *nodechain_ptr, Destructor destructor, long long index);
+
 #endif //DATA_STRUCTURES_NODECHAIN_H
