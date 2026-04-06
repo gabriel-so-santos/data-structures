@@ -55,6 +55,14 @@
         );                                                                      \
     }                                                                           \
                                                                                 \
+    static inline ds_err_t                                                      \
+    ds_##Name##_reverse(ds_##Name##_t list)                                     \
+    {                                                                           \
+        return DS_CHECK(                                                        \
+            ds__nc_reverse(list.nodechain_ptr)                                  \
+        );                                                                      \
+    }                                                                           \
+                                                                                \
     static inline size_t                                                        \
     ds_##Name##_length(ds_##Name##_t list)                                      \
     {                                                                           \

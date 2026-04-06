@@ -158,6 +158,35 @@ ds__nc_assign(NodeChain *dst, const NodeChain *src, const size_t value_size,
 
 
 ds_err_t
+ds__nc_reverse(NodeChain *nodechain_ptr)
+{
+    if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
+
+    if (nodechain_ptr->length <= 1) return LIBDS_SUCCESS;
+
+    Node *prev_node = NULL;
+    Node *next_node = NULL;
+    Node *curr_node = nodechain_ptr->head;
+
+    while (curr_node != NULL)
+    {
+        next_node = curr_node->next;
+        curr_node->next = prev_node;
+
+        // After the loop, 'prev_node' is pointing to the last processed node
+        prev_node = curr_node;
+        curr_node = next_node;
+    }
+
+
+    nodechain_ptr->tail = nodechain_ptr->head;
+    nodechain_ptr->head = prev_node;
+
+    return LIBDS_SUCCESS;
+}
+
+
+ds_err_t
 ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
 {
     if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
