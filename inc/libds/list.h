@@ -10,7 +10,7 @@
 #include <libds/core.h>
 #include <libds/err.h>
 
-#define DS_DEFINE_LIST(Type, Name, destructor_func)                             \
+#define DS_DEFINE_LIST(Type, Name, destructor_fn, copier_fn)                    \
                                                                                 \
     typedef TypeWrapper ds_##Name##_t;                                          \
                                                                                 \
@@ -19,7 +19,8 @@
     {                                                                           \
         ds_##Name##_t list = {                                                  \
             .value_size = sizeof(Type),                                         \
-            .destructor = (destructor_func),                                    \
+            .destructor = (destructor_fn),                                      \
+            .copier = (copier_fn),                                              \
             .nodechain_ptr = ds__nc_alloc(),                                    \
         };                                                                      \
         return list;                                                            \
@@ -32,14 +33,27 @@
             ds__nc_free(&list->nodechain_ptr, list->destructor)                 \
         );                                                                      \
     }                                                                           \
-    \
-    static inline ds_err_t\
-    ds_##Name##_clear(ds_##Name##_t list)\
-    {\
-        return DS_CHECK(\
-            ds__nc_clear(list.nodechain_ptr, list.destructor)\
-        );\
-    }  \
+                                                                                \
+    static inline ds_err_t                                                      \
+    ds_##Name##_clear(ds_##Name##_t list)                                       \
+    {                                                                           \
+        return DS_CHECK(                                                        \
+            ds__nc_clear(list.nodechain_ptr, list.destructor)                   \
+        );                                                                      \
+    }                                                                           \
+    static inline ds_err_t                                                      \
+    ds_##Name##_assign(ds_##Name##_t dst_list, const ds_##Name##_t src_list)    \
+    {                                                                           \
+        return DS_CHECK(                                                        \
+            ds__nc_assign(                                                      \
+                dst_list.nodechain_ptr,                                         \
+                src_list.nodechain_ptr,                                         \
+                dst_list.value_size,                                            \
+                dst_list.destructor,                                            \
+                dst_list.copier                                                 \
+            )                                                                   \
+        );                                                                      \
+    }                                                                           \
                                                                                 \
     static inline size_t                                                        \
     ds_##Name##_length(ds_##Name##_t list)                                      \

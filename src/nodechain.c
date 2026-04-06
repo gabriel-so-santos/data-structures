@@ -104,6 +104,60 @@ ds__nc_clear(NodeChain *nodechain_ptr, const Destructor destructor)
 
 
 ds_err_t
+ds__nc_assign(NodeChain *dst, const NodeChain *src, const size_t value_size,
+    const Destructor destructor, const Copier copier)
+{
+    if (dst == src) return LIBDS_SUCCESS;
+    if (!dst || !src) return LIBDS_ERR_NULL_POINTER;
+
+    NodeChain temp_chain = { .head = NULL, .tail = NULL, .length = 0 };
+
+    const Node *src_node = src->head;
+    while (src_node != NULL)
+    {
+        Node *new_node = ds__node_alloc(src_node->value, value_size);
+        if (!new_node)
+        {
+            // If allocation failed, clean up and abort.
+            ds__nc_clear(&temp_chain, destructor);
+            return LIBDS_ERR_ALLOCATION_FAILED;
+        }
+
+        if (copier)
+        {
+            const ds_err_t err = copier(new_node->value, src_node->value);
+            if (err != LIBDS_SUCCESS)
+            {
+                // If allocation failed, clean up and abort.
+                free(new_node);
+                ds__nc_clear(&temp_chain, destructor);
+                return err;
+            }
+        }
+
+        if (!temp_chain.head)
+            temp_chain.head = new_node; // Empty chain case
+        else
+            temp_chain.tail->next = new_node; // Append the new node
+
+        temp_chain.tail = new_node; // Update tail
+        temp_chain.length++;
+
+        src_node = src_node->next;
+    }
+
+
+    ds__nc_clear(dst, destructor);
+
+    dst->head = temp_chain.head;
+    dst->tail = temp_chain.tail;
+    dst->length = temp_chain.length;
+
+    return LIBDS_SUCCESS;
+}
+
+
+ds_err_t
 ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
 {
     if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;

@@ -13,6 +13,7 @@ typedef struct TypeWrapper
 {
     const size_t value_size;
     const Destructor destructor;
+    const Copier copier;
     NodeChain *nodechain_ptr;
 } TypeWrapper;
 
