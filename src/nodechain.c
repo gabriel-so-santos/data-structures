@@ -7,20 +7,95 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <internal/nodechain.h>
+#include "internal/nodechain.h"
+
+#ifndef LIBDS_MIN_NC_BUFFER_LIMIT
+    #define LIBDS_MIN_NC_BUFFER_LIMIT 16
+#endif
+
+#ifndef LIBDS_NC_BUFFER_BATCH_SIZE
+    #define LIBDS_NC_BUFFER_BATCH_SIZE 4
+#endif
+
+#define LIBDS__MIN(x, y) ((x) < (y) ? (x) : (y))
+#define LIBDS__MAX(x, y) ((x) > (y) ? (x) : (y))
 
 typedef struct Node
 {
     struct Node *next;
-    unsigned char value[];  // Flexible array member
+    unsigned char value[]; // Flexible array member
 } Node;
+
 
 struct NodeChain
 {
     Node *head;
     Node *tail;
+    Node *buffer; // Cached available nodes
+    size_t buffer_size;
+    size_t buffer_limit;
     size_t length;
 };
+
+
+static Node *
+ds__node_alloc(NodeChain *nodechain_ptr, const void *value_ptr, const size_t value_size)
+{
+    if (!nodechain_ptr->buffer)
+    {
+        for (size_t i = 0; i < LIBDS_NC_BUFFER_BATCH_SIZE; i++)
+        {
+            // If malloc fails, it keeps successfully allocated nodes
+            Node *cached_node = malloc(sizeof(Node) + value_size);
+            if (!cached_node) break;
+
+            cached_node->next = nodechain_ptr->buffer;
+            nodechain_ptr->buffer = cached_node;
+            nodechain_ptr->buffer_size++;
+        }
+
+        if (!nodechain_ptr->buffer) return NULL;
+    }
+
+    // Pop from cache
+    Node *new_node = nodechain_ptr->buffer;
+    nodechain_ptr->buffer = nodechain_ptr->buffer->next;
+    nodechain_ptr->buffer_size--;
+
+    // Update node fields
+    memcpy(new_node->value, value_ptr, value_size);
+    new_node->next = NULL;
+
+    // Update nodechain fields
+    nodechain_ptr->length++;
+    const size_t dynamic_limit = nodechain_ptr->length >> 2; // 25% of length
+    nodechain_ptr->buffer_limit = LIBDS__MAX(dynamic_limit, LIBDS_MIN_NC_BUFFER_LIMIT);
+
+    return new_node;
+}
+
+
+static void
+ds__node_free(NodeChain *nodechain, Node *node, const Destructor destructor)
+{
+    if (destructor)
+        destructor(node->value);
+
+    if (nodechain->buffer_size < nodechain->buffer_limit)
+    {
+        // Push to cache
+        node->next = nodechain->buffer;
+        nodechain->buffer = node;
+        nodechain->buffer_size++;
+    }
+    else free(node);
+
+    // Update nodechain fields
+    nodechain->length--;
+    const size_t dynamic_limit = nodechain->length >> 2; // 25% of length
+    nodechain->buffer_limit = LIBDS__MAX(dynamic_limit, LIBDS_MIN_NC_BUFFER_LIMIT);
+}
+
 
 size_t
 ds__nc_length(const NodeChain *nodechain_ptr)
@@ -29,23 +104,12 @@ ds__nc_length(const NodeChain *nodechain_ptr)
     return nodechain_ptr->length;
 }
 
+
 bool
 ds__nc_isempty(const NodeChain *nodechain_ptr)
 {
     if (!nodechain_ptr) return true;
     return nodechain_ptr->length == 0;
-}
-
-
-Node *
-ds__node_alloc(const void *value_ptr, const size_t value_size)
-{
-    Node *new_node = malloc(sizeof(Node) + value_size);
-    if (!new_node) return NULL;
-
-    memcpy(new_node->value, value_ptr, value_size);
-    new_node->next = NULL;
-    return new_node;
 }
 
 
@@ -57,6 +121,9 @@ ds__nc_alloc(void)
 
     new_structure->head = NULL;
     new_structure->tail = NULL;
+    new_structure->buffer = NULL;
+    new_structure->buffer_size = 0;
+    new_structure->buffer_limit = 0;
     new_structure->length = 0;
 
     return new_structure;
@@ -69,6 +136,14 @@ ds__nc_free(NodeChain **nodechain_dptr, const Destructor destructor)
     if (!nodechain_dptr || !*nodechain_dptr) return LIBDS_ERR_NULL_POINTER;
 
     ds__nc_clear(*nodechain_dptr, destructor);
+
+    Node *buffer = (*nodechain_dptr)->buffer;
+    while (buffer != NULL)
+    {
+        Node *next = buffer->next;
+        free(buffer);
+        buffer = next;
+    }
 
     free(*nodechain_dptr);
     *nodechain_dptr = NULL;
@@ -83,15 +158,11 @@ ds__nc_clear(NodeChain *nodechain_ptr, const Destructor destructor)
     if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
     Node *node = nodechain_ptr->head;
-
     while (node != NULL)
     {
         Node *next = node->next;
 
-        if (destructor)
-            destructor(node->value);
-
-        free(node);
+        ds__node_free(nodechain_ptr, node, destructor);
         node = next;
     }
 
@@ -110,16 +181,17 @@ ds__nc_assign(NodeChain *dst, const NodeChain *src, const size_t value_size,
     if (dst == src) return LIBDS_SUCCESS;
     if (!dst || !src) return LIBDS_ERR_NULL_POINTER;
 
-    NodeChain temp_chain = { .head = NULL, .tail = NULL, .length = 0 };
+    NodeChain *new_nodechain = ds__nc_alloc();
+    if (!new_nodechain) return LIBDS_ERR_ALLOCATION_FAILED;
 
     const Node *src_node = src->head;
     while (src_node != NULL)
     {
-        Node *new_node = ds__node_alloc(src_node->value, value_size);
+        Node *new_node = ds__node_alloc(new_nodechain, src_node->value, value_size);
         if (!new_node)
         {
-            // If allocation failed, clean up and abort.
-            ds__nc_clear(&temp_chain, destructor);
+            // If allocation fails, clean up and abort.
+            ds__nc_free(&new_nodechain, destructor);
             return LIBDS_ERR_ALLOCATION_FAILED;
         }
 
@@ -128,30 +200,48 @@ ds__nc_assign(NodeChain *dst, const NodeChain *src, const size_t value_size,
             const ds_err_t err = copier(new_node->value, src_node->value);
             if (err != LIBDS_SUCCESS)
             {
-                // If allocation failed, clean up and abort.
-                free(new_node);
-                ds__nc_clear(&temp_chain, destructor);
+                // If copy fails, clean up and abort
+                ds__node_free(new_nodechain, new_node, destructor);
+                ds__nc_free(&new_nodechain, destructor);
                 return err;
             }
         }
 
-        if (!temp_chain.head)
-            temp_chain.head = new_node; // Empty chain case
+        if (!new_nodechain->head)
+            new_nodechain->head = new_node; // Empty nodechain case
         else
-            temp_chain.tail->next = new_node; // Append the new node
+            new_nodechain->tail->next = new_node; // Append the new node
 
-        temp_chain.tail = new_node; // Update tail
-        temp_chain.length++;
+        new_nodechain->tail = new_node; // Update tail
 
         src_node = src_node->next;
     }
 
-
     ds__nc_clear(dst, destructor);
 
-    dst->head = temp_chain.head;
-    dst->tail = temp_chain.tail;
-    dst->length = temp_chain.length;
+    dst->head = new_nodechain->head;
+    dst->tail = new_nodechain->tail;
+    dst->length = new_nodechain->length;
+
+    const size_t dyn_limit = dst->length >> 2; // 25% of length
+    dst->buffer_limit = LIBDS__MAX(dyn_limit, LIBDS_MIN_NC_BUFFER_LIMIT);
+
+    Node *buffer = new_nodechain->buffer;
+    while (buffer != NULL)
+    {
+        Node *next = buffer->next;
+        if (dst->buffer_size < dst->buffer_limit)
+        {
+            buffer->next = dst->buffer;
+            dst->buffer = buffer;
+            dst->buffer_size++;
+        }
+        else free(buffer); // when dst->buffer is full
+
+        buffer = next;
+    }
+
+    free(new_nodechain);
 
     return LIBDS_SUCCESS;
 }
@@ -178,7 +268,6 @@ ds__nc_reverse(NodeChain *nodechain_ptr)
         curr_node = next_node;
     }
 
-
     nodechain_ptr->tail = nodechain_ptr->head;
     nodechain_ptr->head = prev_node;
 
@@ -191,7 +280,7 @@ ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, const size_t 
 {
     if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
-    Node *new_node = ds__node_alloc(value_ptr, value_size);
+    Node *new_node = ds__node_alloc(nodechain_ptr, value_ptr, value_size);
     if (!new_node) return LIBDS_ERR_ALLOCATION_FAILED;
 
     new_node->next = nodechain_ptr->head;
@@ -200,7 +289,6 @@ ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, const size_t 
         nodechain_ptr->tail = new_node;
 
     nodechain_ptr->head = new_node;
-    nodechain_ptr->length++;
 
     return LIBDS_SUCCESS;
 }
@@ -211,7 +299,7 @@ ds__nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, const size_t v
 {
     if (!nodechain_ptr) return LIBDS_ERR_NULL_POINTER;
 
-    Node *new_node = ds__node_alloc(value_ptr, value_size);
+    Node *new_node = ds__node_alloc(nodechain_ptr, value_ptr, value_size);
     if (!new_node) return LIBDS_ERR_ALLOCATION_FAILED;
 
     if (!nodechain_ptr->head)
@@ -224,8 +312,6 @@ ds__nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, const size_t v
         nodechain_ptr->tail->next = new_node;
         nodechain_ptr->tail = new_node;
     }
-
-    nodechain_ptr->length++;
 
     return LIBDS_SUCCESS;
 }
@@ -240,7 +326,7 @@ ds__nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, const size_t val
 
     // Negative index counts from the tail
     if (index < 0)
-        index += (long long) length;
+        index += (long long) length; // Subtract value from length
 
     if (index < 0 || (size_t) index > length)
         return LIBDS_ERR_INDEX_OUT_OF_BOUNDS;
@@ -260,12 +346,11 @@ ds__nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, const size_t val
     for (size_t i = 0; i < unsigned_index - 1; i++)
         prev_node = prev_node->next;
 
-    Node *new_node = ds__node_alloc(value_ptr, value_size);
+    Node *new_node = ds__node_alloc(nodechain_ptr, value_ptr, value_size);
     if (!new_node) return LIBDS_ERR_ALLOCATION_FAILED;
 
     new_node->next = prev_node->next;
     prev_node->next = new_node;
-    nodechain_ptr->length++;
 
     return LIBDS_SUCCESS;
 }
@@ -350,11 +435,7 @@ ds__nc_drop_front(NodeChain *nodechain_ptr, const Destructor destructor)
     if (!nodechain_ptr->head)
         nodechain_ptr->tail = NULL;
 
-    if (destructor)
-        destructor(old_head->value);
-
-    free(old_head);
-    nodechain_ptr->length--;
+    ds__node_free(nodechain_ptr, old_head, destructor);
 
     return LIBDS_SUCCESS;
 }
@@ -388,11 +469,7 @@ ds__nc_drop_back(NodeChain *nodechain_ptr, const Destructor destructor)
         nodechain_ptr->tail = tail_prev;
     }
 
-    if (destructor)
-        destructor(old_tail->value);
-
-    free(old_tail);
-    nodechain_ptr->length--;
+    ds__node_free(nodechain_ptr, old_tail, destructor);
 
     return LIBDS_SUCCESS;
 }
@@ -429,14 +506,9 @@ ds__nc_drop_at(NodeChain *nodechain_ptr, const Destructor destructor, long long 
         prev_node = prev_node->next;
 
     Node *node = prev_node->next;
-
     prev_node->next = node->next;
 
-    if (destructor)
-        destructor(node->value);
-
-    free(node);
-    nodechain_ptr->length--;
+    ds__node_free(nodechain_ptr, node, destructor);
 
     return LIBDS_SUCCESS;
 }
