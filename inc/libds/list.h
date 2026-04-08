@@ -84,54 +84,78 @@
     static inline ds_err_t                                                      \
     ds_##Name##_first(ds_##Name##_t list, Type *output_ptr)                     \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_get_front(list.nodechain_ptr, output_ptr, list.value_size)   \
+        void *data_ptr = NULL;                                                  \
+        ds_err_t status = DS_CHECK(                                             \
+            ds__nc_get_front(list.nodechain_ptr, &data_ptr)                     \
         );                                                                      \
+        if (status == LIBDS_SUCCESS)                                            \
+            *output_ptr = *((Type *)data_ptr);                                  \
+        return status;                                                          \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
     ds_##Name##_last(ds_##Name##_t list, Type *output_ptr)                      \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_get_back(list.nodechain_ptr, output_ptr, list.value_size)    \
+        void *data_ptr = NULL;                                                  \
+        ds_err_t status = DS_CHECK(                                             \
+            ds__nc_get_back(list.nodechain_ptr, &data_ptr)                      \
         );                                                                      \
+        if (status == LIBDS_SUCCESS)                                            \
+            *output_ptr = *((Type *)data_ptr);                                  \
+                                                                                \
+        return status;                                                          \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
     ds_##Name##_get(ds_##Name##_t list, Type *output_ptr, long long index)      \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_get_at(                                                      \
-                list.nodechain_ptr,                                             \
-                output_ptr,                                                     \
-                list.value_size,                                                \
-                index                                                           \
-            )                                                                   \
+        void *data_ptr = NULL;                                                  \
+        ds_err_t status = DS_CHECK(                                             \
+            ds__nc_get_at(list.nodechain_ptr, &data_ptr, index)                 \
         );                                                                      \
+        if (status == LIBDS_SUCCESS)                                            \
+            *output_ptr = *((Type *)data_ptr);                                  \
+                                                                                \
+        return status;                                                          \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
     ds_##Name##_prepend(ds_##Name##_t list, Type value)                         \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_push_front(list.nodechain_ptr, &value, list.value_size)      \
+        void *data_ptr = NULL;                                                  \
+        ds_err_t status = DS_CHECK(                                             \
+            ds__nc_push_front(list.nodechain_ptr, &data_ptr)                    \
         );                                                                      \
+        if (status == LIBDS_SUCCESS)                                            \
+            *((Type *)data_ptr) = value;                                        \
+                                                                                \
+        return status;                                                          \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
     ds_##Name##_append(ds_##Name##_t list, Type value)                          \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_push_back(list.nodechain_ptr, &value, list.value_size)       \
+        void *data_ptr = NULL;                                                  \
+        ds_err_t status = DS_CHECK(                                             \
+            ds__nc_push_back(list.nodechain_ptr, &data_ptr)                     \
         );                                                                      \
+        if (status == LIBDS_SUCCESS)                                            \
+            *((Type *)data_ptr) = value;                                        \
+                                                                                \
+        return status;                                                          \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \
     ds_##Name##_insert(ds_##Name##_t list, Type value, long long index)         \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_push_at(list.nodechain_ptr, &value, list.value_size, index)  \
+        void *data_ptr = NULL;                                                  \
+        ds_err_t status = DS_CHECK(                                             \
+            ds__nc_push_at(list.nodechain_ptr, &data_ptr, index)                \
         );                                                                      \
+        if (status == LIBDS_SUCCESS)                                            \
+            *((Type *)data_ptr) = value;                                        \
+                                                                                \
+        return status;                                                          \
     }                                                                           \
                                                                                 \
     static inline ds_err_t                                                      \

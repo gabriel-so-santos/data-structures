@@ -37,22 +37,22 @@ bool
 ds__nc_isempty(const NodeChain *nodechain_ptr);
 
 ds_err_t
-ds__nc_push_front(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
+ds__nc_push_front(NodeChain *nodechain_ptr, void **data_dptr);
 
 ds_err_t
-ds__nc_push_back(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size);
+ds__nc_push_back(NodeChain *nodechain_ptr, void **data_dptr);
 
 ds_err_t
-ds__nc_push_at(NodeChain *nodechain_ptr, const void *value_ptr, size_t value_size, long long index);
+ds__nc_push_at(NodeChain *nodechain_ptr, void **data_dptr, long long index);
 
 ds_err_t
-ds__nc_get_front(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
+ds__nc_get_front(const NodeChain *nodechain_ptr, void **output_dptr);
 
 ds_err_t
-ds__nc_get_back(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size);
+ds__nc_get_back(const NodeChain *nodechain_ptr, void **output_dptr);
 
 ds_err_t
-ds__nc_get_at(const NodeChain *nodechain_ptr, void *output_ptr, size_t output_size, long long index);
+ds__nc_get_at(const NodeChain *nodechain_ptr, void **output_dptr, long long index);
 
 ds_err_t
 ds__nc_drop_front(NodeChain *nodechain_ptr, Destructor destructor);
