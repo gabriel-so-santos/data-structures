@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdalign.h>
 #include <libds/core.h>
 #include <libds/err.h>
 
@@ -17,11 +18,15 @@
     static inline ds_##Name##_t                                                 \
     ds_##Name##_create(void)                                                    \
     {                                                                           \
+        size_t size = sizeof(Type);                                             \
+        size_t align = alignof(Type);                                           \
+                                                                                \
         ds_##Name##_t list = {                                                  \
-            .value_size = sizeof(Type),                                         \
+            .value_size = size,                                                 \
+            .value_align = align,                                               \
             .destructor = (destructor_fn),                                      \
             .copier = (copier_fn),                                              \
-            .nodechain_ptr = ds__nc_alloc(),                                    \
+            .nodechain_ptr = ds__nc_alloc(size, align),                         \
         };                                                                      \
         return list;                                                            \
     }                                                                           \
@@ -49,6 +54,7 @@
                 dst_list.nodechain_ptr,                                         \
                 src_list.nodechain_ptr,                                         \
                 dst_list.value_size,                                            \
+                dst_list.value_align,                                           \
                 dst_list.destructor,                                            \
                 dst_list.copier                                                 \
             )                                                                   \

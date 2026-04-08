@@ -14,7 +14,7 @@ typedef void (*Destructor)(void *);
 typedef ds_err_t (*Copier)(void *dst_value, const void *src_value);
 
 NodeChain *
-ds__nc_alloc(void);
+ds__nc_alloc(size_t value_size, size_t value_align);
 
 ds_err_t
 ds__nc_free(NodeChain **nodechain_dptr, Destructor destructor);
@@ -23,7 +23,9 @@ ds_err_t
 ds__nc_clear(NodeChain *nodechain_ptr, Destructor destructor);
 
 ds_err_t
-ds__nc_assign(NodeChain *dst, const NodeChain *src, size_t value_size, Destructor destructor, Copier copier);
+ds__nc_assign(NodeChain *dst, const NodeChain *src,
+    size_t value_size, size_t value_align,
+    Destructor destructor, Copier copier);
 
 ds_err_t
 ds__nc_reverse(NodeChain *nodechain_ptr);
