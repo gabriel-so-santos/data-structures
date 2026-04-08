@@ -13,7 +13,14 @@
 
 #define DS_DEFINE_LIST(Type, Name, destructor_fn, copier_fn)                    \
                                                                                 \
-    typedef TypeWrapper ds_##Name##_t;                                          \
+    typedef struct ds_##Name##                                                  \
+    {                                                                           \
+        const size_t value_size;                                                \
+        const size_t value_align;                                               \
+        const Destructor destructor;                                            \
+        const Copier copier;                                                    \
+        NodeChain *nodechain_ptr;                                               \
+    } ds_##Name##_t;                                                            \
                                                                                 \
     static inline ds_##Name##_t                                                 \
     ds_##Name##_create(void)                                                    \
