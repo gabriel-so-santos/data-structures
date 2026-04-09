@@ -5,62 +5,56 @@
 #ifndef DATA_STRUCTURES_NODECHAIN_H
 #define DATA_STRUCTURES_NODECHAIN_H
 
-#include <stddef.h>
-#include <libds/err.h>
+#include "libds/core.h"
 
-typedef struct NodeChain NodeChain;
+struct ds_node_chain *
+ds_nc_alloc(size_t value_size, size_t value_align);
 
-typedef void (*Destructor)(void *);
-typedef ds_err_t (*Copier)(void *dst_value, const void *src_value);
+ds_error_t
+ds_nc_free(struct ds_node_chain **chain_dptr, ds_destructor_t destroy_fn);
 
-NodeChain *
-ds__nc_alloc(size_t value_size, size_t value_align);
+ds_error_t
+ds_nc_clear(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn);
 
-ds_err_t
-ds__nc_free(NodeChain **nodechain_dptr, Destructor destructor);
-
-ds_err_t
-ds__nc_clear(NodeChain *nodechain_ptr, Destructor destructor);
-
-ds_err_t
-ds__nc_assign(NodeChain *dst, const NodeChain *src,
+ds_error_t
+ds_nc_copy(struct ds_node_chain *dst_chain, const struct ds_node_chain *src_chain,
     size_t value_size, size_t value_align,
-    Destructor destructor, Copier copier);
+    ds_copier_t copy_fn, ds_destructor_t destroy_fn);
 
-ds_err_t
-ds__nc_reverse(NodeChain *nodechain_ptr);
+ds_error_t
+ds_nc_reverse(struct ds_node_chain *chain_ptr);
 
 size_t
-ds__nc_length(const NodeChain *nodechain_ptr);
+ds_nc_length(const struct ds_node_chain *chain_ptr);
 
 bool
-ds__nc_isempty(const NodeChain *nodechain_ptr);
+ds_nc_is_empty(const struct ds_node_chain *chain_ptr);
 
-ds_err_t
-ds__nc_push_front(NodeChain *nodechain_ptr, void **data_dptr);
+ds_error_t
+ds_nc_push_front(struct ds_node_chain *chain_ptr, void **data_dptr);
 
-ds_err_t
-ds__nc_push_back(NodeChain *nodechain_ptr, void **data_dptr);
+ds_error_t
+ds_nc_push_back(struct ds_node_chain *chain_ptr, void **data_dptr);
 
-ds_err_t
-ds__nc_push_at(NodeChain *nodechain_ptr, void **data_dptr, long long index);
+ds_error_t
+ds_nc_push_at(struct ds_node_chain *chain_ptr, void **data_dptr, long long index);
 
-ds_err_t
-ds__nc_get_front(const NodeChain *nodechain_ptr, void **output_dptr);
+ds_error_t
+ds_nc_get_front(const struct ds_node_chain *chain_ptr, void **out_dptr);
 
-ds_err_t
-ds__nc_get_back(const NodeChain *nodechain_ptr, void **output_dptr);
+ds_error_t
+ds_nc_get_back(const struct ds_node_chain *chain_ptr, void **out_dptr);
 
-ds_err_t
-ds__nc_get_at(const NodeChain *nodechain_ptr, void **output_dptr, long long index);
+ds_error_t
+ds_nc_get_at(const struct ds_node_chain *chain_ptr, void **out_dptr, long long index);
 
-ds_err_t
-ds__nc_drop_front(NodeChain *nodechain_ptr, Destructor destructor);
+ds_error_t
+ds_nc_drop_front(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn);
 
-ds_err_t
-ds__nc_drop_back(NodeChain *nodechain_ptr, Destructor destructor);
+ds_error_t
+ds_nc_drop_back(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn);
 
-ds_err_t
-ds__nc_drop_at(NodeChain *nodechain_ptr, Destructor destructor, long long index);
+ds_error_t
+ds_nc_drop_at(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn, long long index);
 
 #endif //DATA_STRUCTURES_NODECHAIN_H

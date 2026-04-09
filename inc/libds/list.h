@@ -8,185 +8,208 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdalign.h>
-#include <libds/core.h>
-#include <libds/err.h>
 
-#define DS_DEFINE_LIST(Type, Name, destructor_fn, copier_fn)                    \
+#include "libds/core.h"
+#include "internal/nodechain.h"
+
+#define LIBDS_DEFINE_LIST(Type, Prefix, ListType, CopyFunc, DestroyFunc)        \
                                                                                 \
-    typedef struct ds_##Name##                                                  \
+    typedef struct ListType                                                     \
     {                                                                           \
-        const size_t value_size;                                                \
-        const size_t value_align;                                               \
-        const Destructor destructor;                                            \
-        const Copier copier;                                                    \
-        NodeChain *nodechain_ptr;                                               \
-    } ds_##Name##_t;                                                            \
+        const size_t           value_size;                                      \
+        const size_t           value_align;                                     \
+        const ds_copier_t      copy_fn;                                         \
+        const ds_destructor_t  destroy_fn;                                      \
+        struct ds_node_chain   *_chain_ptr; /* must not be directly modified */ \
+    } ListType;                                                                 \
                                                                                 \
-    static inline ds_##Name##_t                                                 \
-    ds_##Name##_create(void)                                                    \
+    static inline ListType                                                      \
+    Prefix##_create(void)                                                       \
     {                                                                           \
-        size_t size = sizeof(Type);                                             \
+        size_t size  = sizeof(Type);                                            \
         size_t align = alignof(Type);                                           \
                                                                                 \
-        ds_##Name##_t list = {                                                  \
-            .value_size = size,                                                 \
+        ListType list = {                                                       \
+            .value_size  = size,                                                \
             .value_align = align,                                               \
-            .destructor = (destructor_fn),                                      \
-            .copier = (copier_fn),                                              \
-            .nodechain_ptr = ds__nc_alloc(size, align),                         \
+            .copy_fn     = (CopyFunc),                                          \
+            .destroy_fn  = (DestroyFunc),                                       \
+            ._chain_ptr  = ds_nc_alloc(size, align)                             \
         };                                                                      \
         return list;                                                            \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_destroy(ds_##Name##_t *list)                                    \
+    static inline enum ds_error                                                 \
+    Prefix##_delete(ListType *list)                                             \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_free(&list->nodechain_ptr, list->destructor)                 \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_free(&list->_chain_ptr, list->destroy_fn)                     \
         );                                                                      \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_clear(ds_##Name##_t list)                                       \
+    static inline enum ds_error                                                 \
+    Prefix##_clear(ListType list)                                               \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_clear(list.nodechain_ptr, list.destructor)                   \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_clear(list._chain_ptr, list.destroy_fn)                       \
         );                                                                      \
     }                                                                           \
-    static inline ds_err_t                                                      \
-    ds_##Name##_assign(ds_##Name##_t dst_list, const ds_##Name##_t src_list)    \
+                                                                                \
+    static inline enum ds_error                                                 \
+    Prefix##_copy(ListType dst_list, const ListType src_list)                   \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_assign(                                                      \
-                dst_list.nodechain_ptr,                                         \
-                src_list.nodechain_ptr,                                         \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_copy(                                                         \
+                dst_list._chain_ptr,                                            \
+                src_list._chain_ptr,                                            \
+                                                                                \
                 dst_list.value_size,                                            \
                 dst_list.value_align,                                           \
-                dst_list.destructor,                                            \
-                dst_list.copier                                                 \
+                dst_list.copy_fn,                                               \
+                dst_list.destroy_fn                                             \
             )                                                                   \
         );                                                                      \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_reverse(ds_##Name##_t list)                                     \
+    static inline enum ds_error                                                 \
+    Prefix##_reverse(ListType list)                                             \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_reverse(list.nodechain_ptr)                                  \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_reverse(list._chain_ptr)                                      \
         );                                                                      \
     }                                                                           \
                                                                                 \
+    /* support of both `#_length` and `#_size` */                               \
     static inline size_t                                                        \
-    ds_##Name##_length(ds_##Name##_t list)                                      \
+    Prefix##_length(ListType list)                                              \
     {                                                                           \
-        return ds__nc_length(list.nodechain_ptr);                               \
+        return ds_nc_length(list._chain_ptr);                                   \
+    }                                                                           \
+    static inline size_t                                                        \
+    Prefix##_size(ListType list)                                                \
+    {                                                                           \
+        return Prefix##_length(list);                                           \
     }                                                                           \
                                                                                 \
     static inline bool                                                          \
-    ds_##Name##_isempty(ds_##Name##_t list)                                     \
+    Prefix##_is_empty(ListType list)                                            \
     {                                                                           \
-        return ds__nc_isempty(list.nodechain_ptr);                              \
+        return ds_nc_is_empty(list._chain_ptr);                                 \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_first(ds_##Name##_t list, Type *output_ptr)                     \
+    static inline ds_error_t                                                    \
+    Prefix##_get_front(ListType list, Type *out_ptr)                            \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_err_t status = DS_CHECK(                                             \
-            ds__nc_get_front(list.nodechain_ptr, &data_ptr)                     \
+        ds_error_t status = LIBDS_CHECK(                                        \
+            ds_nc_get_front(list._chain_ptr, &data_ptr)                         \
         );                                                                      \
-        if (status == LIBDS_SUCCESS)                                            \
-            *output_ptr = *((Type *)data_ptr);                                  \
-        return status;                                                          \
-    }                                                                           \
-                                                                                \
-    static inline ds_err_t                                                      \
-    ds_##Name##_last(ds_##Name##_t list, Type *output_ptr)                      \
-    {                                                                           \
-        void *data_ptr = NULL;                                                  \
-        ds_err_t status = DS_CHECK(                                             \
-            ds__nc_get_back(list.nodechain_ptr, &data_ptr)                      \
-        );                                                                      \
-        if (status == LIBDS_SUCCESS)                                            \
-            *output_ptr = *((Type *)data_ptr);                                  \
+        if (status == DS_ERR_NONE)                                              \
+            *out_ptr = *((Type *)data_ptr);                                     \
                                                                                 \
         return status;                                                          \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_get(ds_##Name##_t list, Type *output_ptr, long long index)      \
+    static inline ds_error_t                                                    \
+    Prefix##_get_back(ListType list, Type *out_ptr)                             \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_err_t status = DS_CHECK(                                             \
-            ds__nc_get_at(list.nodechain_ptr, &data_ptr, index)                 \
+        ds_error_t status = LIBDS_CHECK(                                        \
+            ds_nc_get_back(list._chain_ptr, &data_ptr)                          \
         );                                                                      \
-        if (status == LIBDS_SUCCESS)                                            \
-            *output_ptr = *((Type *)data_ptr);                                  \
+        if (status == DS_ERR_NONE)                                              \
+            *out_ptr = *((Type *)data_ptr);                                     \
                                                                                 \
         return status;                                                          \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_prepend(ds_##Name##_t list, Type value)                         \
+    static inline ds_error_t                                                    \
+    Prefix##_get_at(ListType list, Type *out_ptr, long long index)              \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_err_t status = DS_CHECK(                                             \
-            ds__nc_push_front(list.nodechain_ptr, &data_ptr)                    \
+        ds_error_t status = LIBDS_CHECK(                                        \
+            ds_nc_get_at(list._chain_ptr, &data_ptr, index)                     \
         );                                                                      \
-        if (status == LIBDS_SUCCESS)                                            \
+        if (status == DS_ERR_NONE)                                              \
+            *out_ptr = *((Type *)data_ptr);                                     \
+                                                                                \
+        return status;                                                          \
+    }                                                                           \
+                                                                                \
+    /* support of both `#_push_front` and `#_prepend` */                        \
+    static inline ds_error_t                                                    \
+    Prefix##_push_front(ListType list, Type value)                              \
+    {                                                                           \
+        void *data_ptr = NULL;                                                  \
+        ds_error_t status = LIBDS_CHECK(                                        \
+            ds_nc_push_front(list._chain_ptr, &data_ptr)                        \
+        );                                                                      \
+        if (status == DS_ERR_NONE)                                              \
+            *((Type *)data_ptr) = value;                                        \
+                                                                                \
+        return status;                                                          \
+    }                                                                           \
+    static inline ds_error_t                                                    \
+    Prefix##_prepend(ListType list, Type value)                                 \
+    {                                                                           \
+        return Prefix##_push_front(list, value);                                \
+    }                                                                           \
+                                                                                \
+    /* support of both `#_push_back` and `#_append` */                          \
+    static inline ds_error_t                                                    \
+    Prefix##_push_back(ListType list, Type value)                               \
+    {                                                                           \
+        void *data_ptr = NULL;                                                  \
+        ds_error_t status = LIBDS_CHECK(                                        \
+            ds_nc_push_back(list._chain_ptr, &data_ptr)                         \
+        );                                                                      \
+        if (status == DS_ERR_NONE)                                              \
+            *((Type *)data_ptr) = value;                                        \
+                                                                                \
+        return status;                                                          \
+    }                                                                           \
+    static inline ds_error_t                                                    \
+    Prefix##_append(ListType list, Type value)                                  \
+    {                                                                           \
+        return Prefix##_push_back(list, value);                                 \
+    }                                                                           \
+                                                                                \
+    static inline ds_error_t                                                    \
+    Prefix##_push_at(ListType list, Type value, long long index)                \
+    {                                                                           \
+        void *data_ptr = NULL;                                                  \
+        ds_error_t status = LIBDS_CHECK(                                        \
+            ds_nc_push_at(list._chain_ptr, &data_ptr, index)                    \
+        );                                                                      \
+        if (status == DS_ERR_NONE)                                              \
             *((Type *)data_ptr) = value;                                        \
                                                                                 \
         return status;                                                          \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_append(ds_##Name##_t list, Type value)                          \
+    static inline ds_error_t                                                    \
+    Prefix##_drop_front(ListType list)                                          \
     {                                                                           \
-        void *data_ptr = NULL;                                                  \
-        ds_err_t status = DS_CHECK(                                             \
-            ds__nc_push_back(list.nodechain_ptr, &data_ptr)                     \
-        );                                                                      \
-        if (status == LIBDS_SUCCESS)                                            \
-            *((Type *)data_ptr) = value;                                        \
-                                                                                \
-        return status;                                                          \
-    }                                                                           \
-                                                                                \
-    static inline ds_err_t                                                      \
-    ds_##Name##_insert(ds_##Name##_t list, Type value, long long index)         \
-    {                                                                           \
-        void *data_ptr = NULL;                                                  \
-        ds_err_t status = DS_CHECK(                                             \
-            ds__nc_push_at(list.nodechain_ptr, &data_ptr, index)                \
-        );                                                                      \
-        if (status == LIBDS_SUCCESS)                                            \
-            *((Type *)data_ptr) = value;                                        \
-                                                                                \
-        return status;                                                          \
-    }                                                                           \
-                                                                                \
-    static inline ds_err_t                                                      \
-    ds_##Name##_dropfirst(ds_##Name##_t list)                                   \
-    {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_drop_front(list.nodechain_ptr, list.destructor)              \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_drop_front(list._chain_ptr, list.destroy_fn)                  \
         );                                                                      \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_droplast(ds_##Name##_t list)                                    \
+    static inline ds_error_t                                                    \
+    Prefix##_drop_back(ListType list)                                           \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_drop_back(list.nodechain_ptr, list.destructor)               \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_drop_back(list._chain_ptr, list.destroy_fn)                   \
         );                                                                      \
     }                                                                           \
                                                                                 \
-    static inline ds_err_t                                                      \
-    ds_##Name##_remove(ds_##Name##_t list, long long index)                     \
+    static inline ds_error_t                                                    \
+    Prefix##_drop_at(ListType list, long long index)                            \
     {                                                                           \
-        return DS_CHECK(                                                        \
-            ds__nc_drop_at(list.nodechain_ptr, list.destructor, index)          \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_drop_at(list._chain_ptr, list.destroy_fn, index)              \
         );                                                                      \
-    }
+    }                                                                           \
+/* end of macro */
 
 #endif //DATA_STRUCTURES_LIST_H
