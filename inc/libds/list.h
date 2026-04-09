@@ -18,9 +18,12 @@
     {                                                                           \
         const size_t           value_size;                                      \
         const size_t           value_align;                                     \
+                                                                                \
         const ds_copier_t      copy_fn;                                         \
         const ds_destructor_t  destroy_fn;                                      \
-        struct ds_node_chain   *_chain_ptr; /* must not be directly modified */ \
+                                                                                \
+        /* must not be directly modified */                                     \
+        struct ds_node_chain   *_chain_ptr;                                     \
     } ListType;                                                                 \
                                                                                 \
     static inline ListType                                                      \
@@ -65,6 +68,7 @@
                                                                                 \
                 dst_list.value_size,                                            \
                 dst_list.value_align,                                           \
+                                                                                \
                 dst_list.copy_fn,                                               \
                 dst_list.destroy_fn                                             \
             )                                                                   \
@@ -101,39 +105,39 @@
     Prefix##_get_front(ListType list, Type *out_ptr)                            \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t status = LIBDS_CHECK(                                        \
+        ds_error_t error = LIBDS_CHECK(                                         \
             ds_nc_get_front(list._chain_ptr, &data_ptr)                         \
         );                                                                      \
-        if (status == DS_ERR_NONE)                                              \
-            *out_ptr = *((Type *)data_ptr);                                     \
+        if (error) return error;                                                \
                                                                                 \
-        return status;                                                          \
+        *out_ptr = *((Type *)data_ptr);                                         \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
     static inline ds_error_t                                                    \
     Prefix##_get_back(ListType list, Type *out_ptr)                             \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t status = LIBDS_CHECK(                                        \
+        ds_error_t error = LIBDS_CHECK(                                         \
             ds_nc_get_back(list._chain_ptr, &data_ptr)                          \
         );                                                                      \
-        if (status == DS_ERR_NONE)                                              \
-            *out_ptr = *((Type *)data_ptr);                                     \
+        if (error) return error;                                                \
                                                                                 \
-        return status;                                                          \
+        *out_ptr = *((Type *)data_ptr);                                         \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
     static inline ds_error_t                                                    \
     Prefix##_get_at(ListType list, Type *out_ptr, long long index)              \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t status = LIBDS_CHECK(                                        \
+        ds_error_t error = LIBDS_CHECK(                                         \
             ds_nc_get_at(list._chain_ptr, &data_ptr, index)                     \
         );                                                                      \
-        if (status == DS_ERR_NONE)                                              \
-            *out_ptr = *((Type *)data_ptr);                                     \
+        if (error) return error;                                                \
                                                                                 \
-        return status;                                                          \
+        *out_ptr = *((Type *)data_ptr);                                         \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
     /* support of both `#_push_front` and `#_prepend` */                        \
@@ -141,13 +145,22 @@
     Prefix##_push_front(ListType list, Type value)                              \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t status = LIBDS_CHECK(                                        \
+        ds_error_t error = LIBDS_CHECK(                                         \
             ds_nc_push_front(list._chain_ptr, &data_ptr)                        \
         );                                                                      \
-        if (status == DS_ERR_NONE)                                              \
-            *((Type *)data_ptr) = value;                                        \
+        if (error) return error;                                                \
                                                                                 \
-        return status;                                                          \
+        if (!list.copy_fn)                                                      \
+            *((Type *)data_ptr) = value;                                        \
+        else                                                                    \
+        {                                                                       \
+            if (!list.copy_fn(data_ptr, &value))                                \
+            {                                                                   \
+                ds_nc_drop_front(list._chain_ptr, NULL);                        \
+                return DS_ERR_COPY_FAILED;                                      \
+            }                                                                   \
+        }                                                                       \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
     static inline ds_error_t                                                    \
     Prefix##_prepend(ListType list, Type value)                                 \
@@ -160,13 +173,22 @@
     Prefix##_push_back(ListType list, Type value)                               \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t status = LIBDS_CHECK(                                        \
+        ds_error_t error = LIBDS_CHECK(                                         \
             ds_nc_push_back(list._chain_ptr, &data_ptr)                         \
         );                                                                      \
-        if (status == DS_ERR_NONE)                                              \
-            *((Type *)data_ptr) = value;                                        \
+        if (error) return error;                                                \
                                                                                 \
-        return status;                                                          \
+        if (!list.copy_fn)                                                      \
+            *((Type *)data_ptr) = value;                                        \
+        else                                                                    \
+        {                                                                       \
+            if (!list.copy_fn(data_ptr, &value))                                \
+            {                                                                   \
+                ds_nc_drop_back(list._chain_ptr, NULL);                         \
+                return DS_ERR_COPY_FAILED;                                      \
+            }                                                                   \
+        }                                                                       \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
     static inline ds_error_t                                                    \
     Prefix##_append(ListType list, Type value)                                  \
@@ -178,13 +200,22 @@
     Prefix##_push_at(ListType list, Type value, long long index)                \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t status = LIBDS_CHECK(                                        \
+        ds_error_t error = LIBDS_CHECK(                                         \
             ds_nc_push_at(list._chain_ptr, &data_ptr, index)                    \
         );                                                                      \
-        if (status == DS_ERR_NONE)                                              \
-            *((Type *)data_ptr) = value;                                        \
+        if (error) return error;                                                \
                                                                                 \
-        return status;                                                          \
+        if (!list.copy_fn)                                                      \
+            *((Type *)data_ptr) = value;                                        \
+        else                                                                    \
+        {                                                                       \
+            if (!list.copy_fn(data_ptr, &value))                                \
+            {                                                                   \
+                ds_nc_drop_at(list._chain_ptr, NULL, index);                    \
+                return DS_ERR_COPY_FAILED;                                      \
+            }                                                                   \
+        }                                                                       \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
     static inline ds_error_t                                                    \

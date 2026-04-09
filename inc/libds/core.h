@@ -35,10 +35,39 @@ typedef enum ds_error
     DS_ERR_NULL_POINTER,        /* Invalid null pointer provided */
     DS_ERR_INDEX_OUT_OF_BOUNDS, /* Index out of bounds */
     DS_ERR_EMPTY_STRUCTURE,     /* Invalid operation on an empty structure */
+    DS_ERR_COPY_FAILED,
 } ds_error_t;
 
+/**
+ * @brief Destructor function contract.
+ *
+ * Expectation: The `value` pointer contains fully initialized valid data.
+ *
+ * Responsibility: It must free any dynamic memory allocated *inside* the
+ * structure (e.g., nested pointers, strings).
+ *
+ * @note It should NOT free the `value` pointer itself, as the library
+ * manages the node's memory.
+ */
 typedef void (*ds_destructor_t)(void *);
-typedef ds_error_t (*ds_copier_t)(void *dst_value, const void *src_value);
+
+/**
+ * @brief Copier function contract.
+ *
+ * Expectation: `src_value` is fully valid. `dst_value` is uninitialized
+ * raw memory provided by the library.
+ *
+ * Responsibility: Perform a deep copy of `src_value` into `dst_value`.
+ *
+ * @return `true` on success, `false` on failure
+ * - On Success: The library will assume `dst_value` is now fully valid.
+ * - On Failure: If the copy fails halfway through (e.g., a nested malloc fails),
+ * the function MUST clean up any memory it already allocated inside `dst_value`,
+ * leave `dst_value` safely abandoned.
+ *
+ * @note The library will NOT call the destructor on `dst_value` if this returns `false`.
+ */
+typedef bool (*ds_copier_t)(void *dst_value, const void *src_value);
 
 const char *
 ds_err_to_string(ds_error_t err);

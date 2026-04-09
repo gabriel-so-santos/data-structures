@@ -109,7 +109,7 @@ alloc_node(NodeChain *chain_ptr)
 
 
 static void
-free_node(NodeChain *chain_ptr, Node *node, const DSDestructor destroy_fn)
+free_node(NodeChain *chain_ptr, Node *node, const ds_destructor_t destroy_fn)
 {
     if (destroy_fn)
     {
@@ -250,7 +250,29 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain,
 
         const void *src_value = get_data(src_chain, src_node);
         void *data_ptr = get_data(new_chain, new_node);
-        memcpy(data_ptr, src_value, value_size);
+
+        if (!copy_fn)
+            memcpy(data_ptr, src_value, value_size);
+        else
+        {
+            if ( !copy_fn(data_ptr, src_value) )
+            {
+                // clean up and abort on copy fail
+
+                /*
+                 * The data inside new_node is invalid,
+                 * so `destroy_fn` cannot be safely called here.
+                 */
+                free_node(new_chain, new_node, NULL);
+
+                /*
+                 * Pass `destroy_fn` to `ds_nc_free` here, because all
+                 * previously copied nodes in new_chain are fully valid.
+                 */
+                ds_nc_free(&new_chain, destroy_fn);
+                return DS_ERR_COPY_FAILED;
+            }
+        }
 
         // update head in the first iteration
         if (!new_chain->head)
@@ -259,18 +281,6 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain,
             new_chain->tail->next = new_node;
 
         new_chain->tail = new_node;
-
-        if (copy_fn)
-        {
-            const ds_error_t status = copy_fn(data_ptr, src_value);
-            if (status != DS_ERR_NONE)
-            {
-                // clean up and abort on copy fail
-                free_node(new_chain, new_node, destroy_fn);
-                ds_nc_free(&new_chain, destroy_fn);
-                return status;
-            }
-        }
 
         src_node = src_node->next;
     }
