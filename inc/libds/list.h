@@ -67,8 +67,6 @@
                 src_list._chain_ptr,                                            \
                                                                                 \
                 dst_list.value_size,                                            \
-                dst_list.value_align,                                           \
-                                                                                \
                 dst_list.copy_fn,                                               \
                 dst_list.destroy_fn                                             \
             )                                                                   \

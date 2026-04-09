@@ -18,8 +18,7 @@ ds_nc_clear(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn);
 
 ds_error_t
 ds_nc_copy(struct ds_node_chain *dst_chain, const struct ds_node_chain *src_chain,
-    size_t value_size, size_t value_align,
-    ds_copier_t copy_fn, ds_destructor_t destroy_fn);
+    size_t value_size, ds_copier_t copy_fn, ds_destructor_t destroy_fn);
 
 ds_error_t
 ds_nc_reverse(struct ds_node_chain *chain_ptr);

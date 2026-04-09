@@ -227,94 +227,88 @@ ds_nc_clear(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
 
 
 ds_error_t
-ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain,
-    const size_t value_size, const size_t value_align,
+ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_size,
     const ds_copier_t copy_fn, const ds_destructor_t destroy_fn)
 {
     if (!dst_chain || !src_chain) return DS_ERR_NULL_POINTER;
     if (dst_chain == src_chain) return DS_ERR_NONE;
 
-    NodeChain *new_chain = ds_nc_alloc(value_size, value_align);
-    if (!new_chain) return DS_ERR_ALLOCATION_FAILED;
+    // detach original data to allow rollback on failure
+    const Node *old_head = dst_chain->head;
+    const Node *old_tail = dst_chain->tail;
+    const size_t old_length = dst_chain->length;
+
+    dst_chain->head = NULL;
+    dst_chain->tail = NULL;
+    dst_chain->length = 0;
 
     const Node *src_node = src_chain->head;
     while (src_node != NULL)
     {
-        Node *new_node = alloc_node(new_chain);
+        Node *new_node = alloc_node(dst_chain);
         if (!new_node)
         {
-            // clean up and abort on allocation fail
-            ds_nc_free(&new_chain, destroy_fn);
+            // rollback on allocation failure
+            ds_nc_clear(dst_chain, destroy_fn);
+            dst_chain->head = (Node *)old_head;
+            dst_chain->tail = (Node *)old_tail;
+            dst_chain->length = old_length;
+
             return DS_ERR_ALLOCATION_FAILED;
         }
 
         const void *src_value = get_data(src_chain, src_node);
-        void *data_ptr = get_data(new_chain, new_node);
+        void *dst_value = get_data(dst_chain, new_node);
 
         if (!copy_fn)
-            memcpy(data_ptr, src_value, value_size);
+            memcpy(dst_value, src_value, value_size);
         else
         {
-            if ( !copy_fn(data_ptr, src_value) )
+            if ( !copy_fn(dst_value, src_value) )
             {
-                // clean up and abort on copy fail
+                // the current new_node is invalid, drop it without destroying
+                free_node(dst_chain, new_node, NULL);
 
-                /*
-                 * The data inside new_node is invalid,
-                 * so `destroy_fn` cannot be safely called here.
-                 */
-                free_node(new_chain, new_node, NULL);
+                // rollback
+                ds_nc_clear(dst_chain, destroy_fn);
+                dst_chain->head = (Node *)old_head;
+                dst_chain->tail = (Node *)old_tail;
+                dst_chain->length = old_length;
 
-                /*
-                 * Pass `destroy_fn` to `ds_nc_free` here, because all
-                 * previously copied nodes in new_chain are fully valid.
-                 */
-                ds_nc_free(&new_chain, destroy_fn);
                 return DS_ERR_COPY_FAILED;
             }
         }
 
         // update head in the first iteration
-        if (!new_chain->head)
-            new_chain->head = new_node;
+        if (!dst_chain->head)
+            dst_chain->head = new_node;
         else
-            new_chain->tail->next = new_node;
+            dst_chain->tail->next = new_node;
 
-        new_chain->tail = new_node;
+        dst_chain->tail = new_node;
 
         src_node = src_node->next;
     }
 
-    ds_nc_clear(dst_chain, destroy_fn);
-
-    dst_chain->head = new_chain->head;
-    dst_chain->tail = new_chain->tail;
-    dst_chain->length = new_chain->length;
-
-    if (new_chain->node_stack)
+    Node *curr_node = (Node *)old_head;
+    Node *next_node = NULL;
+    while (curr_node != NULL)
     {
-        Node *cache_tail = new_chain->node_stack;
+        if (destroy_fn)
+        {
+            void *data_ptr = get_data(dst_chain, curr_node);
+            destroy_fn(data_ptr);
+        }
 
-        while (cache_tail->next != NULL)
-            cache_tail = cache_tail->next;
+        next_node = curr_node->next;
 
-        cache_tail->next = dst_chain->node_stack;
-        dst_chain->node_stack = new_chain->node_stack;
-        dst_chain->stack_size += new_chain->stack_size;
+        curr_node->next = dst_chain->node_stack;
+        dst_chain->node_stack = curr_node;
+        dst_chain->stack_size++;
+
+        curr_node = next_node;
     }
 
-    if (new_chain->buffer)
-    {
-        Node *buffer_tail = new_chain->buffer;
-
-        while (buffer_tail->next != NULL)
-            buffer_tail = buffer_tail->next;
-
-        buffer_tail->next = dst_chain->buffer;
-        dst_chain->buffer = new_chain->buffer;
-    }
-
-    free(new_chain);
     return DS_ERR_NONE;
 }
 
