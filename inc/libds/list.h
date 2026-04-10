@@ -92,6 +92,12 @@
     {                                                                           \
         return Prefix##_length(list);                                           \
     }                                                                           \
+    \
+    static inline size_t\
+    Prefix##_bytes(ListType list)\
+    {\
+        return ds_nc_bytes(list._chain_ptr);\
+    }   \
                                                                                 \
     static inline bool                                                          \
     Prefix##_is_empty(ListType list)                                            \

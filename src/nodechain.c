@@ -142,6 +142,27 @@ ds_nc_is_empty(const NodeChain *chain_ptr)
 }
 
 
+size_t
+ds_nc_bytes(const NodeChain *chain_ptr)
+{
+    if (!chain_ptr) return 0;
+
+    size_t chunk_count = 0;
+    const Node *curr_chunk = chain_ptr->buffer;
+    while (curr_chunk != NULL)
+    {
+        chunk_count++;
+        curr_chunk = curr_chunk->next;
+    }
+
+    const size_t struct_size = sizeof(NodeChain);
+    const size_t nodes_total_size = (chain_ptr->length + chain_ptr->stack_size) * chain_ptr->stride;
+    const size_t buffer_headers_size = chunk_count * sizeof(Node);
+
+    return struct_size + nodes_total_size + buffer_headers_size;
+}
+
+
 NodeChain *
 ds_nc_alloc(const size_t value_size, const size_t value_align)
 {

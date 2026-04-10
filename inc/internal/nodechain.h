@@ -26,6 +26,9 @@ ds_nc_reverse(struct ds_node_chain *chain_ptr);
 size_t
 ds_nc_length(const struct ds_node_chain *chain_ptr);
 
+size_t
+ds_nc_bytes(const struct ds_node_chain *chain_ptr);
+
 bool
 ds_nc_is_empty(const struct ds_node_chain *chain_ptr);
 
