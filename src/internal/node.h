@@ -12,6 +12,10 @@
 #define LIBDS_NC_MIN_BATCH_SIZE 8
 #endif
 
+#ifndef LIBDS_NC_GROWTH_FACTOR
+#define LIBDS_NC_GROWTH_FACTOR 1.25
+#endif
+
 struct node { struct node *next; };
 typedef struct node Node;
 
@@ -44,9 +48,10 @@ alloc_node(NodeChain *chain)
     if (!chain->node_stack)
     {
         // dynamic batch sizing: geometric growth based of current length
-        const size_t dyn_size = chain->length >> 3;
         const size_t min_size = LIBDS_NC_MIN_BATCH_SIZE;
+        const double growth_factor = LIBDS_NC_GROWTH_FACTOR;
 
+        const size_t dyn_size = chain->length * growth_factor;
         const size_t batch_size = max(min_size, dyn_size);
         const size_t chunk_bytes = batch_size * chain->stride;
 
