@@ -1,16 +1,16 @@
 //
-// Created by Gabriel Souza on 17/02/2026.
+// Created by Gabriel Souza on 09/04/2026.
 //
 
-#ifndef DATA_STRUCTURES_LIST_H
-#define DATA_STRUCTURES_LIST_H
+#ifndef DATA_STRUCTURES_LIST_DEF_H
+#define DATA_STRUCTURES_LIST_DEF_H
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdalign.h>
 
-#include "libds/core.h"
-#include "internal/nodechain.h"
+#include "core.h"
+#include "impl/nodechain.h"
 
 #define LIBDS_DEFINE_LIST(Type, Prefix, ListType, CopyFunc, DestroyFunc)        \
                                                                                 \
@@ -285,4 +285,4 @@
     }                                                                           \
 /* end of macro */
 
-#endif //DATA_STRUCTURES_LIST_H
+#endif //DATA_STRUCTURES_LIST_DEF_H

@@ -5,6 +5,7 @@
 #ifndef DATA_STRUCTURES_NODECHAIN_H
 #define DATA_STRUCTURES_NODECHAIN_H
 
+#include <stddef.h>
 #include "libds/core.h"
 
 struct ds_node_chain *
