@@ -13,7 +13,7 @@
 #endif
 
 const char *
-ds_err_to_string(const ds_error_t err)
+ds_err_to_string(const enum ds_error err)
 {
     switch (err)
     {
@@ -37,8 +37,8 @@ ds_err_to_string(const ds_error_t err)
     }
 }
 
-ds_error_t
-ds_handle_err(const ds_error_t err, const char *expr, const char *file, const int line, const char *func)
+enum ds_error
+ds_handle_err(const enum ds_error err, const char *expr, const char *file, const int line, const char *func)
 {
     if (err == DS_ERR_NONE)
         return err;

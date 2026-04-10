@@ -28,7 +28,7 @@
 
 struct ds_node_chain;
 
-typedef enum ds_error
+enum ds_error
 {
     DS_ERR_NONE = 0,            /* No error */
     DS_ERR_ALLOCATION_FAILED,   /* Memory allocation failed */
@@ -36,7 +36,7 @@ typedef enum ds_error
     DS_ERR_INDEX_OUT_OF_BOUNDS, /* Index out of bounds */
     DS_ERR_EMPTY_STRUCTURE,     /* Invalid operation on an empty structure */
     DS_ERR_COPY_FAILED,
-} ds_error_t;
+};
 
 /**
  * @brief Destructor function contract.
@@ -70,9 +70,9 @@ typedef void (*ds_destructor_t)(void *);
 typedef bool (*ds_copier_t)(void *dst_value, const void *src_value);
 
 const char *
-ds_err_to_string(ds_error_t err);
+ds_err_to_string(enum ds_error err);
 
-ds_error_t
-ds_handle_err(ds_error_t err, const char *expr, const char *file, int line, const char *func);
+enum ds_error
+ds_handle_err(enum ds_error err, const char *expr, const char *file, int line, const char *func);
 
 #endif //DATA_STRUCTURES_CORE_H

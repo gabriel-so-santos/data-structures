@@ -97,11 +97,11 @@
         return ds_nc_is_empty(list._chain_ptr);                                 \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_get_front(ListType list, Type *out_ptr)                            \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_get_front(list._chain_ptr, &data_ptr)                         \
         );                                                                      \
         if (error) return error;                                                \
@@ -110,11 +110,11 @@
         return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_get_back(ListType list, Type *out_ptr)                             \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_get_back(list._chain_ptr, &data_ptr)                          \
         );                                                                      \
         if (error) return error;                                                \
@@ -123,11 +123,11 @@
         return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_get_at(ListType list, Type *out_ptr, long long index)              \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_get_at(list._chain_ptr, &data_ptr, index)                     \
         );                                                                      \
         if (error) return error;                                                \
@@ -137,11 +137,11 @@
     }                                                                           \
                                                                                 \
     /* support of both `#_push_front` and `#_prepend` */                        \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_push_front(ListType list, Type value)                              \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_push_front(list._chain_ptr, &data_ptr)                        \
         );                                                                      \
         if (error) return error;                                                \
@@ -158,18 +158,18 @@
         }                                                                       \
         return DS_ERR_NONE;                                                     \
     }                                                                           \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_prepend(ListType list, Type value)                                 \
     {                                                                           \
         return Prefix##_push_front(list, value);                                \
     }                                                                           \
                                                                                 \
     /* support of both `#_push_back` and `#_append` */                          \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_push_back(ListType list, Type value)                               \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_push_back(list._chain_ptr, &data_ptr)                         \
         );                                                                      \
         if (error) return error;                                                \
@@ -186,17 +186,17 @@
         }                                                                       \
         return DS_ERR_NONE;                                                     \
     }                                                                           \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_append(ListType list, Type value)                                  \
     {                                                                           \
         return Prefix##_push_back(list, value);                                 \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_push_at(ListType list, Type value, long long index)                \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_push_at(list._chain_ptr, &data_ptr, index)                    \
         );                                                                      \
         if (error) return error;                                                \
@@ -214,7 +214,7 @@
         return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_drop_front(ListType list)                                          \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
@@ -222,7 +222,7 @@
         );                                                                      \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_drop_back(ListType list)                                           \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
@@ -230,18 +230,18 @@
         );                                                                      \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_drop_at(ListType list, long long index)                            \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
             ds_nc_pop_at(list._chain_ptr, list.destroy_fn, NULL, index)         \
         );                                                                      \
     }                                                                           \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_pop_front(ListType list, Type *out_ptr)                            \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_pop_front(list._chain_ptr, list.destroy_fn, &data_ptr)        \
         );                                                                      \
         if (error) return error;                                                \
@@ -250,11 +250,11 @@
         return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_pop_back(ListType list, Type *out_ptr)                             \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_pop_back(list._chain_ptr, list.destroy_fn, &data_ptr)         \
         );                                                                      \
         if (error) return error;                                                \
@@ -263,11 +263,11 @@
         return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
-    static inline ds_error_t                                                    \
+    static inline enum ds_error                                                    \
     Prefix##_pop_at(ListType list, Type *out_ptr, long long index)              \
     {                                                                           \
         void *data_ptr = NULL;                                                  \
-        ds_error_t error = LIBDS_CHECK(                                         \
+        enum ds_error error = LIBDS_CHECK(                                         \
             ds_nc_pop_at(list._chain_ptr, list.destroy_fn, &data_ptr, index)    \
         );                                                                      \
         if (error) return error;                                                \

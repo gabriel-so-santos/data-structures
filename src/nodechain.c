@@ -79,7 +79,7 @@ ds_nc_alloc(const size_t value_size, const size_t value_align)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_free(NodeChain **chain_dptr, const ds_destructor_t destroy_fn)
 {
     if (!chain_dptr || !*chain_dptr) return DS_ERR_NULL_POINTER;
@@ -109,7 +109,7 @@ ds_nc_free(NodeChain **chain_dptr, const ds_destructor_t destroy_fn)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_clear(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
@@ -138,7 +138,7 @@ ds_nc_clear(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_size,
     const ds_copier_t copy_fn, const ds_destructor_t destroy_fn)
 {
@@ -225,7 +225,7 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_reverse(NodeChain *chain_ptr)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
@@ -251,7 +251,7 @@ ds_nc_reverse(NodeChain *chain_ptr)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_push_front(NodeChain *chain_ptr, void **data_dptr)
 {
     if (!chain_ptr || !data_dptr) return DS_ERR_NULL_POINTER;
@@ -272,7 +272,7 @@ ds_nc_push_front(NodeChain *chain_ptr, void **data_dptr)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_push_back(NodeChain *chain_ptr, void **data_dptr)
 {
     if (!chain_ptr || !data_dptr) return DS_ERR_NULL_POINTER;
@@ -298,7 +298,7 @@ ds_nc_push_back(NodeChain *chain_ptr, void **data_dptr)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_push_at(NodeChain *chain_ptr, void **data_dptr, long long index)
 {
     if (!chain_ptr || !data_dptr)
@@ -338,7 +338,7 @@ ds_nc_push_at(NodeChain *chain_ptr, void **data_dptr, long long index)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_get_front(const NodeChain *chain_ptr, void **out_dptr)
 {
     if (!chain_ptr || !out_dptr) return DS_ERR_NULL_POINTER;
@@ -349,7 +349,7 @@ ds_nc_get_front(const NodeChain *chain_ptr, void **out_dptr)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_get_back(const NodeChain *chain_ptr, void **out_dptr)
 {
     if (!chain_ptr || !out_dptr) return DS_ERR_NULL_POINTER;
@@ -360,7 +360,7 @@ ds_nc_get_back(const NodeChain *chain_ptr, void **out_dptr)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_get_at(const NodeChain *chain_ptr, void **out_dptr, long long index)
 {
     if (!chain_ptr || !out_dptr) return DS_ERR_NULL_POINTER;
@@ -393,7 +393,7 @@ ds_nc_get_at(const NodeChain *chain_ptr, void **out_dptr, long long index)
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_pop_front(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **out_dptr)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
@@ -413,7 +413,7 @@ ds_nc_pop_front(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **o
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_pop_back(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **out_dptr)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
@@ -446,7 +446,7 @@ ds_nc_pop_back(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **ou
 }
 
 
-ds_error_t
+enum ds_error
 ds_nc_pop_at(NodeChain *chain_ptr, const ds_destructor_t destroy_fn,
     void **out_dptr, long long index)
 {
