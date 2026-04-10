@@ -92,12 +92,12 @@
     {                                                                           \
         return Prefix##_length(list);                                           \
     }                                                                           \
-    \
-    static inline size_t\
-    Prefix##_bytes(ListType list)\
-    {\
-        return ds_nc_bytes(list._chain_ptr);\
-    }   \
+                                                                                \
+    static inline size_t                                                        \
+    Prefix##_bytes(ListType list)                                               \
+    {                                                                           \
+        return ds_nc_bytes(list._chain_ptr);                                    \
+    }                                                                           \
                                                                                 \
     static inline bool                                                          \
     Prefix##_is_empty(ListType list)                                            \
@@ -160,7 +160,7 @@
         {                                                                       \
             if (!list.copy_fn(data_ptr, &value))                                \
             {                                                                   \
-                ds_nc_drop_front(list._chain_ptr, NULL);                        \
+                ds_nc_pop_front(list._chain_ptr, NULL, NULL);                   \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -188,7 +188,7 @@
         {                                                                       \
             if (!list.copy_fn(data_ptr, &value))                                \
             {                                                                   \
-                ds_nc_drop_back(list._chain_ptr, NULL);                         \
+                ds_nc_pop_back(list._chain_ptr, NULL, NULL);                    \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -215,7 +215,7 @@
         {                                                                       \
             if (!list.copy_fn(data_ptr, &value))                                \
             {                                                                   \
-                ds_nc_drop_at(list._chain_ptr, NULL, index);                    \
+                ds_nc_pop_at(list._chain_ptr, NULL, NULL, index);               \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -226,7 +226,7 @@
     Prefix##_drop_front(ListType list)                                          \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_drop_front(list._chain_ptr, list.destroy_fn)                  \
+            ds_nc_pop_front(list._chain_ptr, list.destroy_fn, NULL)             \
         );                                                                      \
     }                                                                           \
                                                                                 \
@@ -234,7 +234,7 @@
     Prefix##_drop_back(ListType list)                                           \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_drop_back(list._chain_ptr, list.destroy_fn)                   \
+            ds_nc_pop_back(list._chain_ptr, list.destroy_fn, NULL)              \
         );                                                                      \
     }                                                                           \
                                                                                 \
@@ -242,8 +242,46 @@
     Prefix##_drop_at(ListType list, long long index)                            \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_drop_at(list._chain_ptr, list.destroy_fn, index)              \
+            ds_nc_pop_at(list._chain_ptr, list.destroy_fn, NULL, index)         \
         );                                                                      \
+    }                                                                           \
+    static inline ds_error_t                                                    \
+    Prefix##_pop_front(ListType list, Type *out_ptr)                            \
+    {                                                                           \
+        void *data_ptr = NULL;                                                  \
+        ds_error_t error = LIBDS_CHECK(                                         \
+            ds_nc_pop_front(list._chain_ptr, list.destroy_fn, &data_ptr)        \
+        );                                                                      \
+        if (error) return error;                                                \
+                                                                                \
+        if (out_ptr) *out_ptr = *((Type *)data_ptr);                            \
+        return DS_ERR_NONE;                                                     \
+    }                                                                           \
+                                                                                \
+    static inline ds_error_t                                                    \
+    Prefix##_pop_back(ListType list, Type *out_ptr)                             \
+    {                                                                           \
+        void *data_ptr = NULL;                                                  \
+        ds_error_t error = LIBDS_CHECK(                                         \
+            ds_nc_pop_back(list._chain_ptr, list.destroy_fn, &data_ptr)         \
+        );                                                                      \
+        if (error) return error;                                                \
+                                                                                \
+        if (out_ptr) *out_ptr = *((Type *)data_ptr);                            \
+        return DS_ERR_NONE;                                                     \
+    }                                                                           \
+                                                                                \
+    static inline ds_error_t                                                    \
+    Prefix##_pop_at(ListType list, Type *out_ptr, long long index)              \
+    {                                                                           \
+        void *data_ptr = NULL;                                                  \
+        ds_error_t error = LIBDS_CHECK(                                         \
+            ds_nc_pop_at(list._chain_ptr, list.destroy_fn, &data_ptr, index)    \
+        );                                                                      \
+        if (error) return error;                                                \
+                                                                                \
+        if (out_ptr) *out_ptr = *((Type *)data_ptr);                            \
+        return DS_ERR_NONE;                                                     \
     }                                                                           \
 /* end of macro */
 

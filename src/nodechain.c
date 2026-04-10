@@ -503,7 +503,7 @@ ds_nc_get_at(const NodeChain *chain_ptr, void **out_dptr, long long index)
 
 
 ds_error_t
-ds_nc_drop_front(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
+ds_nc_pop_front(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **out_dptr)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
     if (!chain_ptr->head) return DS_ERR_EMPTY_STRUCTURE;
@@ -515,13 +515,15 @@ ds_nc_drop_front(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
     if (!chain_ptr->head)
         chain_ptr->tail = NULL;
 
+    if (out_dptr) *out_dptr = get_data(chain_ptr, old_head);
+
     free_node(chain_ptr, old_head, destroy_fn);
     return DS_ERR_NONE;
 }
 
 
 ds_error_t
-ds_nc_drop_back(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
+ds_nc_pop_back(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **out_dptr)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
     if (!chain_ptr->tail) return DS_ERR_EMPTY_STRUCTURE;
@@ -546,13 +548,16 @@ ds_nc_drop_back(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
         chain_ptr->tail = tail_prev;
     }
 
+    if (out_dptr) *out_dptr = get_data(chain_ptr, old_tail);
+
     free_node(chain_ptr, old_tail, destroy_fn);
     return DS_ERR_NONE;
 }
 
 
 ds_error_t
-ds_nc_drop_at(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, long long index)
+ds_nc_pop_at(NodeChain *chain_ptr, const ds_destructor_t destroy_fn,
+    void **out_dptr, long long index)
 {
     if (!chain_ptr) return DS_ERR_NULL_POINTER;
     if (!chain_ptr->head) return DS_ERR_EMPTY_STRUCTURE;
@@ -567,21 +572,23 @@ ds_nc_drop_at(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, long long 
 
     const size_t unsigned_index = (size_t) index;
 
-    // drop the first node
+    // pop the first node
     if (unsigned_index == 0)
-        return ds_nc_drop_front(chain_ptr, destroy_fn);
+        return ds_nc_pop_front(chain_ptr, destroy_fn, out_dptr);
 
-    // drop the last node
+    // pop the last node
     if (unsigned_index == length - 1)
-        return ds_nc_drop_back(chain_ptr, destroy_fn);
+        return ds_nc_pop_back(chain_ptr, destroy_fn, out_dptr);
 
-    // drop a node in between
+    // pop a node in between
     Node *prev_node = chain_ptr->head;
     for (size_t i = 0; i < unsigned_index - 1; i++)
         prev_node = prev_node->next;
 
     Node *node = prev_node->next;
     prev_node->next = node->next;
+
+    if (out_dptr) *out_dptr = get_data(chain_ptr, node);
 
     free_node(chain_ptr, node, destroy_fn);
     return DS_ERR_NONE;

@@ -51,12 +51,12 @@ ds_error_t
 ds_nc_get_at(const struct ds_node_chain *chain_ptr, void **out_dptr, long long index);
 
 ds_error_t
-ds_nc_drop_front(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn);
+ds_nc_pop_front(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn, void **out_dptr);
 
 ds_error_t
-ds_nc_drop_back(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn);
+ds_nc_pop_back(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn, void **out_dptr);
 
 ds_error_t
-ds_nc_drop_at(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn, long long index);
+ds_nc_pop_at(struct ds_node_chain *chain_ptr, ds_destructor_t destroy_fn, void **out_dptr, long long index);
 
 #endif //DATA_STRUCTURES_NODECHAIN_H
