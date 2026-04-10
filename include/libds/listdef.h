@@ -16,14 +16,9 @@
                                                                                 \
     typedef struct ListType                                                     \
     {                                                                           \
-        const size_t           value_size;                                      \
-        const size_t           value_align;                                     \
-                                                                                \
         const ds_copier_t      copy_fn;                                         \
         const ds_destructor_t  destroy_fn;                                      \
-                                                                                \
-        /* must not be directly modified */                                     \
-        struct ds_node_chain   *_chain_ptr;                                     \
+        struct ds_node_chain   *_chain_ptr; /* must NOT be modified directly */ \
     } ListType;                                                                 \
                                                                                 \
     static inline ListType                                                      \
@@ -33,8 +28,6 @@
         size_t align = alignof(Type);                                           \
                                                                                 \
         ListType list = {                                                       \
-            .value_size  = size,                                                \
-            .value_align = align,                                               \
             .copy_fn     = (CopyFunc),                                          \
             .destroy_fn  = (DestroyFunc),                                       \
             ._chain_ptr  = ds_nc_alloc(size, align)                             \
@@ -65,8 +58,7 @@
             ds_nc_copy(                                                         \
                 dst_list._chain_ptr,                                            \
                 src_list._chain_ptr,                                            \
-                                                                                \
-                dst_list.value_size,                                            \
+                sizeof(Type),                                                   \
                 dst_list.copy_fn,                                               \
                 dst_list.destroy_fn                                             \
             )                                                                   \
