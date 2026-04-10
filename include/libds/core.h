@@ -49,7 +49,7 @@ enum ds_error
  * @note It should NOT free the `value` pointer itself, as the library
  * manages the node's memory.
  */
-typedef void (*ds_destructor_t)(void *);
+typedef void (*ds_destructor_fn)(void *);
 
 /**
  * @brief Copier function contract.
@@ -67,7 +67,7 @@ typedef void (*ds_destructor_t)(void *);
  *
  * @note The library will NOT call the destructor on `dst_value` if this returns `false`.
  */
-typedef bool (*ds_copier_t)(void *dst_value, const void *src_value);
+typedef bool (*ds_copier_fn)(void *dst_value, const void *src_value);
 
 const char *
 ds_err_to_string(enum ds_error err);

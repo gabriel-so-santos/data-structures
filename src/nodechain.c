@@ -18,28 +18,28 @@
 
 
 size_t
-ds_nc_length(const NodeChain *chain_ptr)
+ds_nc_length(const NodeChain *chain)
 {
-    if (!chain_ptr) return 0;
-    return chain_ptr->length;
+    if (!chain) return 0;
+    return chain->length;
 }
 
 
 bool
-ds_nc_is_empty(const NodeChain *chain_ptr)
+ds_nc_is_empty(const NodeChain *chain)
 {
-    if (!chain_ptr) return true;
-    return chain_ptr->length == 0;
+    if (!chain) return true;
+    return chain->length == 0;
 }
 
 
 size_t
-ds_nc_bytes(const NodeChain *chain_ptr)
+ds_nc_bytes(const NodeChain *chain)
 {
-    if (!chain_ptr) return 0;
+    if (!chain) return 0;
 
     size_t chunk_count = 0;
-    const Node *curr_chunk = chain_ptr->buffer;
+    const Node *curr_chunk = chain->buffer;
     while (curr_chunk != NULL)
     {
         chunk_count++;
@@ -47,7 +47,7 @@ ds_nc_bytes(const NodeChain *chain_ptr)
     }
 
     const size_t struct_size = sizeof(NodeChain);
-    const size_t nodes_total_size = (chain_ptr->length + chain_ptr->stack_size) * chain_ptr->stride;
+    const size_t nodes_total_size = (chain->length + chain->stack_size) * chain->stride;
     const size_t buffer_headers_size = chunk_count * sizeof(Node);
 
     return struct_size + nodes_total_size + buffer_headers_size;
@@ -80,22 +80,22 @@ ds_nc_alloc(const size_t value_size, const size_t value_align)
 
 
 enum ds_error
-ds_nc_free(NodeChain **chain_dptr, const ds_destructor_t destroy_fn)
+ds_nc_free(NodeChain **chain_ref, const ds_destructor_fn destroy)
 {
-    if (!chain_dptr || !*chain_dptr) return DS_ERR_NULL_POINTER;
+    if (!chain_ref || !*chain_ref) return DS_ERR_NULL_POINTER;
 
-    if (destroy_fn)
+    if (destroy)
     {
-        const Node *node = (*chain_dptr)->head;
+        const Node *node = (*chain_ref)->head;
         while (node != NULL)
         {
-            void *data_ptr = get_data(*chain_dptr, node);
-            destroy_fn(data_ptr);
+            void *data = get_data(*chain_ref, node);
+            destroy(data);
             node = node->next;
         }
     }
 
-    Node *buffer = (*chain_dptr)->buffer;
+    Node *buffer = (*chain_ref)->buffer;
     while (buffer != NULL)
     {
         Node *next = buffer->next;
@@ -103,44 +103,44 @@ ds_nc_free(NodeChain **chain_dptr, const ds_destructor_t destroy_fn)
         buffer = next;
     }
 
-    free(*chain_dptr);
-    *chain_dptr = NULL;
+    free(*chain_ref);
+    *chain_ref = NULL;
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_clear(NodeChain *chain_ptr, const ds_destructor_t destroy_fn)
+ds_nc_clear(NodeChain *chain, const ds_destructor_fn destroy)
 {
-    if (!chain_ptr) return DS_ERR_NULL_POINTER;
-    if (chain_ptr->length == 0) return DS_ERR_NONE;
+    if (!chain) return DS_ERR_NULL_POINTER;
+    if (chain->length == 0) return DS_ERR_NONE;
 
-    if (destroy_fn)
+    if (destroy)
     {
-        const Node *node = chain_ptr->head;
+        const Node *node = chain->head;
         while (node != NULL)
         {
-            void *data_ptr = get_data(chain_ptr, node);
-            destroy_fn(data_ptr);
+            void *data = get_data(chain, node);
+            destroy(data);
             node = node->next;
         }
     }
 
-    // push to stack (available nodes)
-    chain_ptr->tail->next = chain_ptr->node_stack;
-    chain_ptr->node_stack = chain_ptr->head;
-    chain_ptr->stack_size += chain_ptr->length;
+    // push to stack of available nodes
+    chain->tail->next = chain->node_stack;
+    chain->node_stack = chain->head;
+    chain->stack_size += chain->length;
 
-    chain_ptr->head = NULL;
-    chain_ptr->tail = NULL;
-    chain_ptr->length = 0;
+    chain->head = NULL;
+    chain->tail = NULL;
+    chain->length = 0;
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
 ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_size,
-    const ds_copier_t copy_fn, const ds_destructor_t destroy_fn)
+    const ds_copier_fn copy, const ds_destructor_fn destroy)
 {
     if (!dst_chain || !src_chain) return DS_ERR_NULL_POINTER;
     if (dst_chain == src_chain) return DS_ERR_NONE;
@@ -160,8 +160,8 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
         Node *new_node = alloc_node(dst_chain);
         if (!new_node)
         {
-            // rollback on allocation failure
-            ds_nc_clear(dst_chain, destroy_fn);
+            // rollback
+            ds_nc_clear(dst_chain, destroy);
             dst_chain->head = (Node *)old_head;
             dst_chain->tail = (Node *)old_tail;
             dst_chain->length = old_length;
@@ -172,17 +172,17 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
         const void *src_value = get_data(src_chain, src_node);
         void *dst_value = get_data(dst_chain, new_node);
 
-        if (!copy_fn)
+        if (!copy)
             memcpy(dst_value, src_value, value_size);
         else
         {
-            if ( !copy_fn(dst_value, src_value) )
+            if ( !copy(dst_value, src_value) )
             {
                 // the current new_node is invalid, drop it without destroying
                 free_node(dst_chain, new_node, NULL);
 
                 // rollback
-                ds_nc_clear(dst_chain, destroy_fn);
+                ds_nc_clear(dst_chain, destroy);
                 dst_chain->head = (Node *)old_head;
                 dst_chain->tail = (Node *)old_tail;
                 dst_chain->length = old_length;
@@ -206,10 +206,10 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
     Node *next_node = NULL;
     while (curr_node != NULL)
     {
-        if (destroy_fn)
+        if (destroy)
         {
             void *data_ptr = get_data(dst_chain, curr_node);
-            destroy_fn(data_ptr);
+            destroy(data_ptr);
         }
 
         next_node = curr_node->next;
@@ -226,14 +226,14 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
 
 
 enum ds_error
-ds_nc_reverse(NodeChain *chain_ptr)
+ds_nc_reverse(NodeChain *chain)
 {
-    if (!chain_ptr) return DS_ERR_NULL_POINTER;
-    if (chain_ptr->length <= 1) return DS_ERR_NONE;
+    if (!chain) return DS_ERR_NULL_POINTER;
+    if (chain->length <= 1) return DS_ERR_NONE;
 
     Node *prev_node = NULL;
     Node *next_node = NULL;
-    Node *curr_node = chain_ptr->head;
+    Node *curr_node = chain->head;
 
     while (curr_node != NULL)
     {
@@ -245,66 +245,66 @@ ds_nc_reverse(NodeChain *chain_ptr)
         curr_node = next_node;
     }
 
-    chain_ptr->tail = chain_ptr->head;
-    chain_ptr->head = prev_node;
+    chain->tail = chain->head;
+    chain->head = prev_node;
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_push_front(NodeChain *chain_ptr, void **data_dptr)
+ds_nc_push_front(NodeChain *chain, void **out)
 {
-    if (!chain_ptr || !data_dptr) return DS_ERR_NULL_POINTER;
+    if (!chain || !out) return DS_ERR_NULL_POINTER;
 
-    Node *new_node = alloc_node(chain_ptr);
+    Node *new_node = alloc_node(chain);
     if (!new_node) return DS_ERR_ALLOCATION_FAILED;
 
-    new_node->next = chain_ptr->head;
+    new_node->next = chain->head;
 
     // empty list case, tail points to the new node
-    if (!chain_ptr->head)
-        chain_ptr->tail = new_node;
+    if (!chain->head)
+        chain->tail = new_node;
 
-    chain_ptr->head = new_node;
+    chain->head = new_node;
 
-    *data_dptr = get_data(chain_ptr, new_node);
+    *out = get_data(chain, new_node);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_push_back(NodeChain *chain_ptr, void **data_dptr)
+ds_nc_push_back(NodeChain *chain, void **out)
 {
-    if (!chain_ptr || !data_dptr) return DS_ERR_NULL_POINTER;
+    if (!chain || !out) return DS_ERR_NULL_POINTER;
 
-    Node *new_node = alloc_node(chain_ptr);
+    Node *new_node = alloc_node(chain);
     if (!new_node) return DS_ERR_ALLOCATION_FAILED;
 
     // empty structure case
-    if (!chain_ptr->head)
+    if (!chain->head)
     {
-        chain_ptr->head = new_node;
-        chain_ptr->tail = new_node;
+        chain->head = new_node;
+        chain->tail = new_node;
     }
     // filled structure case
     else
     {
-        chain_ptr->tail->next = new_node;
-        chain_ptr->tail = new_node;
+        chain->tail->next = new_node;
+        chain->tail = new_node;
     }
 
-    *data_dptr = get_data(chain_ptr, new_node);
+    *out = get_data(chain, new_node);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_push_at(NodeChain *chain_ptr, void **data_dptr, long long index)
+ds_nc_push_at(NodeChain *chain, void **out, long long index)
 {
-    if (!chain_ptr || !data_dptr)
+    if (!chain || !out)
         return DS_ERR_NULL_POINTER;
 
-    const size_t length = chain_ptr->length;
+    const size_t length = chain->length;
 
     // if negative, subtract index from length
     if (index < 0) index += (long long) length;
@@ -312,60 +312,58 @@ ds_nc_push_at(NodeChain *chain_ptr, void **data_dptr, long long index)
     if (index < 0 || (size_t) index > length)
         return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
-    const size_t unsigned_index = (size_t) index;
+    const size_t uindex = (size_t) index;
 
     // insert the node at beginning
-    if (unsigned_index == 0)
-        return ds_nc_push_front(chain_ptr, data_dptr);
+    if (uindex == 0) return ds_nc_push_front(chain, out);
 
     // insert the node at end
-    if (unsigned_index == length)
-        return ds_nc_push_back(chain_ptr, data_dptr);
+    if (uindex == length) return ds_nc_push_back(chain, out);
 
     // insert the node in between
-    Node *prev_node = chain_ptr->head;
-    for (size_t i = 0; i < unsigned_index - 1; i++)
+    Node *prev_node = chain->head;
+    for (size_t i = 0; i < uindex - 1; i++)
         prev_node = prev_node->next;
 
-    Node *new_node = alloc_node(chain_ptr);
+    Node *new_node = alloc_node(chain);
     if (!new_node) return DS_ERR_ALLOCATION_FAILED;
 
     new_node->next = prev_node->next;
     prev_node->next = new_node;
 
-    *data_dptr = get_data(chain_ptr, new_node);
+    *out = get_data(chain, new_node);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_get_front(const NodeChain *chain_ptr, void **out_dptr)
+ds_nc_get_front(const NodeChain *chain, void **out)
 {
-    if (!chain_ptr || !out_dptr) return DS_ERR_NULL_POINTER;
-    if (!chain_ptr->head) return DS_ERR_EMPTY_STRUCTURE;
+    if (!chain || !out) return DS_ERR_NULL_POINTER;
+    if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
 
-    *out_dptr = get_data(chain_ptr, chain_ptr->head);
+    *out = get_data(chain, chain->head);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_get_back(const NodeChain *chain_ptr, void **out_dptr)
+ds_nc_get_back(const NodeChain *chain, void **out)
 {
-    if (!chain_ptr || !out_dptr) return DS_ERR_NULL_POINTER;
-    if (!chain_ptr->tail) return DS_ERR_EMPTY_STRUCTURE;
+    if (!chain || !out) return DS_ERR_NULL_POINTER;
+    if (!chain->tail) return DS_ERR_EMPTY_STRUCTURE;
 
-    *out_dptr = get_data(chain_ptr, chain_ptr->tail);
+    *out = get_data(chain, chain->tail);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_get_at(const NodeChain *chain_ptr, void **out_dptr, long long index)
+ds_nc_get_at(const NodeChain *chain, void **out, long long index)
 {
-    if (!chain_ptr || !out_dptr) return DS_ERR_NULL_POINTER;
+    if (!chain || !out) return DS_ERR_NULL_POINTER;
 
-    const size_t length = chain_ptr->length;
+    const size_t length = chain->length;
 
     // if negative, subtract index from length
     if (index < 0) index += (long long) length;
@@ -373,87 +371,84 @@ ds_nc_get_at(const NodeChain *chain_ptr, void **out_dptr, long long index)
     if (index < 0 || (size_t) index >= length)
         return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
-    const size_t unsigned_index = (size_t) index;
+    const size_t uindex = (size_t) index;
 
     // get the first node
-    if (unsigned_index == 0)
-        return ds_nc_get_front(chain_ptr, out_dptr);
+    if (uindex == 0) return ds_nc_get_front(chain, out);
 
     // get the last node
-    if (unsigned_index == length - 1)
-        return ds_nc_get_back(chain_ptr, out_dptr);
+    if (uindex == length -1) return ds_nc_get_back(chain, out);
 
     // get a node in between
-    const Node *node = chain_ptr->head;
-    for (size_t i = 0; i < unsigned_index; i++)
+    const Node *node = chain->head;
+    for (size_t i = 0; i < uindex; i++)
         node = node->next;
 
-    *out_dptr = get_data(chain_ptr, node);
+    *out = get_data(chain, node);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_pop_front(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **out_dptr)
+ds_nc_pop_front(NodeChain *chain, const ds_destructor_fn destroy, void **out)
 {
-    if (!chain_ptr) return DS_ERR_NULL_POINTER;
-    if (!chain_ptr->head) return DS_ERR_EMPTY_STRUCTURE;
+    if (!chain) return DS_ERR_NULL_POINTER;
+    if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
 
-    Node *old_head = chain_ptr->head;
-    chain_ptr->head = old_head->next;
+    Node *old_head = chain->head;
+    chain->head = old_head->next;
 
     // if the structure is now empty, tail must be set to NULL
-    if (!chain_ptr->head)
-        chain_ptr->tail = NULL;
+    if (!chain->head) chain->tail = NULL;
 
-    if (out_dptr) *out_dptr = get_data(chain_ptr, old_head);
+    if (out) *out = get_data(chain, old_head);
 
-    free_node(chain_ptr, old_head, destroy_fn);
+    free_node(chain, old_head, destroy);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_pop_back(NodeChain *chain_ptr, const ds_destructor_t destroy_fn, void **out_dptr)
+ds_nc_pop_back(NodeChain *chain, const ds_destructor_fn destroy, void **out)
 {
-    if (!chain_ptr) return DS_ERR_NULL_POINTER;
-    if (!chain_ptr->tail) return DS_ERR_EMPTY_STRUCTURE;
+    if (!chain) return DS_ERR_NULL_POINTER;
+    if (!chain->tail) return DS_ERR_EMPTY_STRUCTURE;
 
-    Node *old_tail = chain_ptr->tail;
+    Node *old_tail = chain->tail;
 
     // empty structure case
-    if (chain_ptr->head == chain_ptr->tail)
+    if (chain->head == chain->tail)
     {
-        chain_ptr->head = NULL;
-        chain_ptr->tail = NULL;
+        chain->head = NULL;
+        chain->tail = NULL;
     }
     // filled structure case
     else
     {
-        Node *tail_prev = chain_ptr->head;
+        Node *tail_prev = chain->head;
 
         while (tail_prev->next != old_tail)
             tail_prev = tail_prev->next;
 
         tail_prev->next = NULL;
-        chain_ptr->tail = tail_prev;
+        chain->tail = tail_prev;
     }
 
-    if (out_dptr) *out_dptr = get_data(chain_ptr, old_tail);
+    if (out) *out = get_data(chain, old_tail);
 
-    free_node(chain_ptr, old_tail, destroy_fn);
+    free_node(chain, old_tail, destroy);
     return DS_ERR_NONE;
 }
 
 
 enum ds_error
-ds_nc_pop_at(NodeChain *chain_ptr, const ds_destructor_t destroy_fn,
-    void **out_dptr, long long index)
+ds_nc_pop_at(NodeChain *chain, const ds_destructor_fn destroy,
+    void **out, long long index)
 {
-    if (!chain_ptr) return DS_ERR_NULL_POINTER;
-    if (!chain_ptr->head) return DS_ERR_EMPTY_STRUCTURE;
+    if (!chain) return DS_ERR_NULL_POINTER;
+    if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
 
-    const size_t length = chain_ptr->length;
+    const size_t length = chain->length;
 
     // if negative, subtract index from length
     if (index < 0) index += (long long) length;
@@ -461,26 +456,24 @@ ds_nc_pop_at(NodeChain *chain_ptr, const ds_destructor_t destroy_fn,
     if (index < 0 || (size_t) index >= length)
         return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
-    const size_t unsigned_index = (size_t) index;
+    const size_t uindex = (size_t) index;
 
     // pop the first node
-    if (unsigned_index == 0)
-        return ds_nc_pop_front(chain_ptr, destroy_fn, out_dptr);
+    if (uindex == 0) return ds_nc_pop_front(chain, destroy, out);
 
     // pop the last node
-    if (unsigned_index == length - 1)
-        return ds_nc_pop_back(chain_ptr, destroy_fn, out_dptr);
+    if (uindex == length - 1) return ds_nc_pop_back(chain, destroy, out);
 
     // pop a node in between
-    Node *prev_node = chain_ptr->head;
-    for (size_t i = 0; i < unsigned_index - 1; i++)
+    Node *prev_node = chain->head;
+    for (size_t i = 0; i < uindex -1; i++)
         prev_node = prev_node->next;
 
     Node *node = prev_node->next;
     prev_node->next = node->next;
 
-    if (out_dptr) *out_dptr = get_data(chain_ptr, node);
+    if (out) *out = get_data(chain, node);
 
-    free_node(chain_ptr, node, destroy_fn);
+    free_node(chain, node, destroy);
     return DS_ERR_NONE;
 }

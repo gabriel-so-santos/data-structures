@@ -12,10 +12,8 @@
 #define LIBDS_NC_MIN_BATCH_SIZE 8
 #endif
 
-typedef struct node
-{
-    struct node *next;
-}Node;
+struct node { struct node *next; };
+typedef struct node Node;
 
 /* Alias for internal usage of node chain */
 typedef struct ds_node_chain NodeChain;
@@ -35,69 +33,68 @@ struct ds_node_chain
 };
 
 static inline void *
-get_data(const NodeChain *chain_ptr, const Node *node)
+get_data(const NodeChain *chain, const Node *node)
 {
-    void *data_ptr = (byte *)node + chain_ptr->offset;
-    return data_ptr;
+    return (byte *)node + chain->offset;
 }
 
 static Node *
-alloc_node(NodeChain *chain_ptr)
+alloc_node(NodeChain *chain)
 {
-    if (!chain_ptr->node_stack)
+    if (!chain->node_stack)
     {
-        // dynamic batch sizing: geometric growth: +12.5% of current length
-        const size_t dyn_size = chain_ptr->length >> 3;
+        // dynamic batch sizing: geometric growth based of current length
+        const size_t dyn_size = chain->length >> 3;
         const size_t min_size = LIBDS_NC_MIN_BATCH_SIZE;
 
         const size_t batch_size = max(min_size, dyn_size);
-        const size_t chunk_bytes = batch_size * chain_ptr->stride;
+        const size_t chunk_bytes = batch_size * chain->stride;
 
         Node *chunk_header = (Node *) malloc(sizeof(Node) + chunk_bytes);
         if (!chunk_header) return NULL;
 
-        chunk_header->next = chain_ptr->buffer;
-        chain_ptr->buffer = chunk_header;
+        chunk_header->next = chain->buffer;
+        chain->buffer = chunk_header;
 
         byte *memory_chunk = (byte *)(chunk_header + 1);
 
         for (size_t i = 0; i < batch_size; i++)
         {
-            Node *cached_node = (Node *)(memory_chunk + (i * chain_ptr->stride));
+            Node *cached_node = (Node *)(memory_chunk + (i * chain->stride));
 
-            cached_node->next = chain_ptr->node_stack;
-            chain_ptr->node_stack = cached_node;
-            chain_ptr->stack_size++;
+            cached_node->next = chain->node_stack;
+            chain->node_stack = cached_node;
+            chain->stack_size++;
         }
     }
 
-    // pop from stack (available nodes)
-    Node *new_node = chain_ptr->node_stack;
-    chain_ptr->node_stack = chain_ptr->node_stack->next;
+    // pop from stack of available nodes
+    Node *new_node = chain->node_stack;
+    chain->node_stack = chain->node_stack->next;
     new_node->next = NULL;
 
-    chain_ptr->stack_size--;
-    chain_ptr->length++;
+    chain->stack_size--;
+    chain->length++;
 
     return new_node;
 }
 
 
 static void
-free_node(NodeChain *chain_ptr, Node *node, const ds_destructor_t destroy_fn)
+free_node(NodeChain *chain, Node *node, const ds_destructor_fn destroy)
 {
-    if (destroy_fn)
+    if (destroy)
     {
-        void *data_ptr = get_data(chain_ptr, node);
-        destroy_fn(data_ptr);
+        void *data = get_data(chain, node);
+        destroy(data);
     }
 
-    // push to stack (available nodes)
-    node->next = chain_ptr->node_stack;
-    chain_ptr->node_stack = node;
+    // push to stack of available nodes
+    node->next = chain->node_stack;
+    chain->node_stack = node;
 
-    chain_ptr->stack_size++;
-    chain_ptr->length--;
+    chain->stack_size++;
+    chain->length--;
 }
 
 #endif //DATA_STRUCTURES_NODE_H
