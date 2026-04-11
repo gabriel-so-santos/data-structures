@@ -59,8 +59,8 @@
                 dst_list._nodes,                                                \
                 src_list._nodes,                                                \
                 sizeof(Type),                                                   \
-                dst_list.copy_fn,                                               \
-                dst_list.destroy_fn                                             \
+                dst_list.copy,                                                  \
+                dst_list.destroy                                                \
             )                                                                   \
         );                                                                      \
     }                                                                           \
@@ -205,7 +205,7 @@
             *((Type *)data) = value;                                            \
         else                                                                    \
         {                                                                       \
-            if ( !list.copy(data_ptr, &value) )                                 \
+            if ( !list.copy(data, &value) )                                     \
             {                                                                   \
                 ds_nc_pop_at(list._nodes, NULL, NULL, index);                   \
                 return DS_ERR_COPY_FAILED;                                      \
@@ -268,7 +268,7 @@
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_pop_at(list._nodes, list.destroy_fn, &data, index)            \
+            ds_nc_pop_at(list._nodes, list.destroy, &data, index)               \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
