@@ -12,42 +12,10 @@
 #include "internal/utils.h"
 #include "internal/node.h"
 
-size_t
-ds_nc_length(const NodeChain *chain)
-{
-    if (!chain) return 0;
-    return chain->length;
-}
 
-
-bool
-ds_nc_is_empty(const NodeChain *chain)
-{
-    if (!chain) return true;
-    return chain->length == 0;
-}
-
-
-size_t
-ds_nc_bytes(const NodeChain *chain)
-{
-    if (!chain) return 0;
-
-    size_t chunk_count = 0;
-    const Node *curr_chunk = chain->buffer;
-    while (curr_chunk != NULL)
-    {
-        chunk_count++;
-        curr_chunk = curr_chunk->next;
-    }
-
-    const size_t struct_size = sizeof(NodeChain);
-    const size_t nodes_total_size = (chain->length + chain->stack_size) * chain->stride;
-    const size_t buffer_headers_size = chunk_count * sizeof(Node);
-
-    return struct_size + nodes_total_size + buffer_headers_size;
-}
-
+//==============================================================================
+// Life-cycle Management
+//==============================================================================
 
 NodeChain *
 ds_nc_alloc(const size_t value_size, const size_t value_align)
@@ -219,6 +187,45 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
     return DS_ERR_NONE;
 }
 
+//==============================================================================
+// Utilities
+//==============================================================================
+
+size_t
+ds_nc_length(const NodeChain *chain)
+{
+    if (!chain) return 0;
+    return chain->length;
+}
+
+
+bool
+ds_nc_is_empty(const NodeChain *chain)
+{
+    if (!chain) return true;
+    return chain->length == 0;
+}
+
+
+size_t
+ds_nc_bytes(const NodeChain *chain)
+{
+    if (!chain) return 0;
+
+    size_t chunk_count = 0;
+    const Node *curr_chunk = chain->buffer;
+    while (curr_chunk != NULL)
+    {
+        chunk_count++;
+        curr_chunk = curr_chunk->next;
+    }
+
+    const size_t struct_size = sizeof(NodeChain);
+    const size_t nodes_total_size = (chain->length + chain->stack_size) * chain->stride;
+    const size_t buffer_headers_size = chunk_count * sizeof(Node);
+
+    return struct_size + nodes_total_size + buffer_headers_size;
+}
 
 enum ds_error
 ds_nc_reverse(NodeChain *chain)
@@ -245,6 +252,9 @@ ds_nc_reverse(NodeChain *chain)
     return DS_ERR_NONE;
 }
 
+//==============================================================================
+// Push Data
+//==============================================================================
 
 enum ds_error
 ds_nc_push_front(NodeChain *chain, void **out)
@@ -330,6 +340,9 @@ ds_nc_push_at(NodeChain *chain, void **out, long long index)
     return DS_ERR_NONE;
 }
 
+//==============================================================================
+// Get Data
+//==============================================================================
 
 enum ds_error
 ds_nc_get_front(const NodeChain *chain, void **out)
@@ -383,6 +396,9 @@ ds_nc_get_at(const NodeChain *chain, void **out, long long index)
     return DS_ERR_NONE;
 }
 
+//==============================================================================
+// Pop Data
+//==============================================================================
 
 enum ds_error
 ds_nc_pop_front(NodeChain *chain, void **out, const ds_destructor_fn destroy)
