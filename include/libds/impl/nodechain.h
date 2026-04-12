@@ -213,7 +213,7 @@ ds_nc_get_back(const struct ds_node_chain *chain, void **out);
  *
  * @param[in]   chain  Pointer to the chain.
  * @param[out]  out    Pointer updated to point at the target data segment.
- * @param[in]   index  Zero‑based position (negative counts backwards from the end).
+ * @param[in]   index  Zero‑based position (range: `0` to `length -1`).
  *
  * @return  DS_ERR_NONE on success,
  * DS_ERR_NULL_POINTER if pointer arguments are invalid,
@@ -225,7 +225,7 @@ ds_nc_get_back(const struct ds_node_chain *chain, void **out);
  * - Space: O(1)
  */
 enum ds_error
-ds_nc_get_at(const struct ds_node_chain *chain, void **out, long long index);
+ds_nc_get_at(const struct ds_node_chain *chain, void **out, size_t index);
 
 
 //==============================================================================
@@ -276,14 +276,14 @@ ds_nc_push_back(struct ds_node_chain *chain, void **out);
  *
  * @param[in,out] chain  Pointer to the chain.
  * @param[out]    out    Pointer updated to the newly allocated data payload area.
- * @param[in]     index  Zero‑based position (negative counts backwards from the end).
+ * @param[in]     index  Zero‑based position (range: `0` to `length`).
  *
  * @return  DS_ERR_NONE on success,
  * DS_ERR_NULL_POINTER if pointer arguments are invalid,
  * DS_ERR_ALLOCATION_FAILED on memory exhaustion/fragmentation, or
  * DS_ERR_INDEX_OUT_OF_BOUNDS if index is invalid.
  *
- * @details Valid indices range from `0` to `length`. If `index == length`, it acts as push_back.
+ * @details If @p index == length, it acts as push_back.
  *
  * @par Complexity
  * - Time:  O(N) (O(1) if index is 0 or equals length)
@@ -291,7 +291,7 @@ ds_nc_push_back(struct ds_node_chain *chain, void **out);
  * Worst case during pool growth
  */
 enum ds_error
-ds_nc_push_at(struct ds_node_chain *chain, void **out, long long index);
+ds_nc_push_at(struct ds_node_chain *chain, void **out, size_t index);
 
 
 //==============================================================================
@@ -341,7 +341,7 @@ ds_nc_pop_back(struct ds_node_chain *chain, void **out, ds_destructor_fn destroy
  *
  * @param[in,out]   chain   Pointer to the chain.
  * @param[out]      out     Optional output pointer to view data before destruction (may be NULL).
- * @param[in]       index   Zero‑based position (negative counts backwards from the end).
+ * @param[in]       index   Zero‑based position (range: `0` to `length -1`).
  * @param[in]       destroy Optional destructor for the removed element (may be NULL).
  *
  * @return  DS_ERR_NONE on success,
@@ -354,7 +354,7 @@ ds_nc_pop_back(struct ds_node_chain *chain, void **out, ds_destructor_fn destroy
  * - Space: O(1)
  */
 enum ds_error
-ds_nc_pop_at(struct ds_node_chain *chain, void **out, long long index, ds_destructor_fn destroy);
+ds_nc_pop_at(struct ds_node_chain *chain, void **out, size_t index, ds_destructor_fn destroy);
 
 /** @} */  //End of NodeChainInternals group
 

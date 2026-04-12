@@ -304,30 +304,20 @@ ds_nc_push_back(NodeChain *chain, void **out)
 
 
 enum ds_error
-ds_nc_push_at(NodeChain *chain, void **out, long long index)
+ds_nc_push_at(NodeChain *chain, void **out, const size_t index)
 {
-    if (!chain || !out)
-        return DS_ERR_NULL_POINTER;
-
-    const size_t length = chain->length;
-
-    // if negative, subtract index from length
-    if (index < 0) index += (long long) length +1;
-
-    if (index < 0 || (size_t) index > length)
-        return DS_ERR_INDEX_OUT_OF_BOUNDS;
-
-    const size_t uindex = (size_t) index;
+    if (!chain || !out) return DS_ERR_NULL_POINTER;
+    if (index > chain->length) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
     // insert the node at beginning
-    if (uindex == 0) return ds_nc_push_front(chain, out);
+    if (index == 0) return ds_nc_push_front(chain, out);
 
     // insert the node at end
-    if (uindex == length) return ds_nc_push_back(chain, out);
+    if (index == chain->length) return ds_nc_push_back(chain, out);
 
     // insert the node in between
     Node *prev_node = chain->head;
-    for (size_t i = 0; i < uindex - 1; i++)
+    for (size_t i = 0; i < index - 1; i++)
         prev_node = prev_node->next;
 
     Node *new_node = alloc_node(chain);
@@ -367,29 +357,20 @@ ds_nc_get_back(const NodeChain *chain, void **out)
 
 
 enum ds_error
-ds_nc_get_at(const NodeChain *chain, void **out, long long index)
+ds_nc_get_at(const NodeChain *chain, void **out, const size_t index)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
-
-    const size_t length = chain->length;
-
-    // if negative, subtract index from length
-    if (index < 0) index += (long long) length;
-
-    if (index < 0 || (size_t) index >= length)
-        return DS_ERR_INDEX_OUT_OF_BOUNDS;
-
-    const size_t uindex = (size_t) index;
+    if (index >= chain->length) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
     // get the first node
-    if (uindex == 0) return ds_nc_get_front(chain, out);
+    if (index == 0) return ds_nc_get_front(chain, out);
 
     // get the last node
-    if (uindex == length -1) return ds_nc_get_back(chain, out);
+    if (index == chain->length -1) return ds_nc_get_back(chain, out);
 
     // get a node in between
     const Node *node = chain->head;
-    for (size_t i = 0; i < uindex; i++)
+    for (size_t i = 0; i < index; i++)
         node = node->next;
 
     *out = get_data(chain, node);
@@ -453,30 +434,21 @@ ds_nc_pop_back(NodeChain *chain, void **out, const ds_destructor_fn destroy)
 
 
 enum ds_error
-ds_nc_pop_at(NodeChain *chain, void **out, long long index, const ds_destructor_fn destroy)
+ds_nc_pop_at(NodeChain *chain, void **out, const size_t index, const ds_destructor_fn destroy)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
     if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
-
-    const size_t length = chain->length;
-
-    // if negative, subtract index from length
-    if (index < 0) index += (long long) length;
-
-    if (index < 0 || (size_t) index >= length)
-        return DS_ERR_INDEX_OUT_OF_BOUNDS;
-
-    const size_t uindex = (size_t) index;
+    if (index >= chain->length) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
     // pop the first node
-    if (uindex == 0) return ds_nc_pop_front(chain, out, destroy);
+    if (index == 0) return ds_nc_pop_front(chain, out, destroy);
 
     // pop the last node
-    if (uindex == length - 1) return ds_nc_pop_back(chain, out, destroy);
+    if (index == chain->length -1) return ds_nc_pop_back(chain, out, destroy);
 
     // pop a node in between
     Node *prev_node = chain->head;
-    for (size_t i = 0; i < uindex -1; i++)
+    for (size_t i = 0; i < index -1; i++)
         prev_node = prev_node->next;
 
     Node *node = prev_node->next;

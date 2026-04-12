@@ -128,7 +128,7 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_get_at(ListType list, Type *out, long long index)                  \
+    Prefix##_get_at(ListType list, Type *out, const size_t index)               \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
@@ -197,7 +197,7 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_push_at(ListType list, Type value, long long index)                \
+    Prefix##_push_at(ListType list, Type value, const size_t index)             \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
@@ -235,7 +235,7 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_drop_at(ListType list, long long index)                            \
+    Prefix##_drop_at(ListType list, const size_t index)                         \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
             ds_nc_pop_at(list._nodes, NULL, index, list.destroy)                \
@@ -268,7 +268,7 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_pop_at(ListType list, Type *out, long long index)                  \
+    Prefix##_pop_at(ListType list, Type *out, const size_t index)               \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
