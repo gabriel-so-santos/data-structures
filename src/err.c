@@ -4,6 +4,14 @@
 
 #include "libds/core.h"
 
+#ifndef LIBDS_ENABLE_ERROR_PRINT
+#define LIBDS_ENABLE_ERROR_PRINT 1
+#endif
+
+#ifndef LIBDS_ENABLE_EXIT_ON_FAIL
+#define LIBDS_ENABLE_EXIT_ON_FAIL 0
+#endif
+
 #ifdef LIBDS_ENABLE_ERROR_PRINT
 #include <stdio.h>
 #endif
