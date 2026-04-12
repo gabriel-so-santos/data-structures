@@ -1,9 +1,13 @@
-//
-// Created by Gabriel Souza on 09/04/2026.
-//
+/**
+ * @file    listdef.h
+ * @brief   Type-safe singly-linked list generator macro.
+ *
+ * @author  Gabriel Souza
+ * @date    2026-04-09
+ */
 
-#ifndef DATA_STRUCTURES_LIST_DEF_H
-#define DATA_STRUCTURES_LIST_DEF_H
+#ifndef LIBDS_LIST_DEF_H
+#define LIBDS_LIST_DEF_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -12,7 +16,7 @@
 #include "core.h"
 #include "impl/nodechain.h"
 
-#define LIBDS_DEFINE_LIST(Type, Prefix, ListType, CopyFunc, DestroyFunc)        \
+#define LIBDS_DEFINE_LIST(Type, ListType, Prefix, CopyFunc, DestroyFunc)        \
                                                                                 \
     typedef struct ListType                                                     \
     {                                                                           \
@@ -207,7 +211,7 @@
         {                                                                       \
             if ( !list.copy(data, &value) )                                     \
             {                                                                   \
-                ds_nc_pop_at(list._nodes, NULL, NULL, index);                   \
+                ds_nc_pop_at(list._nodes, NULL, index, NULL);                   \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -218,7 +222,7 @@
     Prefix##_drop_front(ListType list)                                          \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_pop_front(list._nodes, list.destroy, NULL)                    \
+            ds_nc_pop_front(list._nodes, NULL, list.destroy)                    \
         );                                                                      \
     }                                                                           \
                                                                                 \
@@ -226,7 +230,7 @@
     Prefix##_drop_back(ListType list)                                           \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_pop_back(list._nodes, list.destroy, NULL)                     \
+            ds_nc_pop_back(list._nodes, NULL, list.destroy)                     \
         );                                                                      \
     }                                                                           \
                                                                                 \
@@ -234,7 +238,7 @@
     Prefix##_drop_at(ListType list, long long index)                            \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_pop_at(list._nodes, list.destroy, NULL, index)                \
+            ds_nc_pop_at(list._nodes, NULL, index, list.destroy)                \
         );                                                                      \
     }                                                                           \
     static inline enum ds_error                                                 \
@@ -242,7 +246,7 @@
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_pop_front(list._nodes, list.destroy, &data)                   \
+            ds_nc_pop_front(list._nodes, &data, list.destroy)                   \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
@@ -255,7 +259,7 @@
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_pop_back(list._nodes, list.destroy, &data)                    \
+            ds_nc_pop_back(list._nodes, &data, list.destroy)                    \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
@@ -268,7 +272,7 @@
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_pop_at(list._nodes, list.destroy, &data, index)               \
+            ds_nc_pop_at(list._nodes, &data, index, list.destroy)               \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
@@ -277,4 +281,4 @@
     }                                                                           \
 /* end of macro */
 
-#endif //DATA_STRUCTURES_LIST_DEF_H
+#endif //LIBDS_LIST_DEF_H

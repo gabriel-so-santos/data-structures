@@ -12,11 +12,6 @@
 #include "internal/utils.h"
 #include "internal/node.h"
 
-#ifndef LIBDS_NC_MIN_BATCH_SIZE
-#define LIBDS_NC_MIN_BATCH_SIZE 8
-#endif
-
-
 size_t
 ds_nc_length(const NodeChain *chain)
 {
@@ -307,7 +302,7 @@ ds_nc_push_at(NodeChain *chain, void **out, long long index)
     const size_t length = chain->length;
 
     // if negative, subtract index from length
-    if (index < 0) index += (long long) length;
+    if (index < 0) index += (long long) length +1;
 
     if (index < 0 || (size_t) index > length)
         return DS_ERR_INDEX_OUT_OF_BOUNDS;
@@ -390,7 +385,7 @@ ds_nc_get_at(const NodeChain *chain, void **out, long long index)
 
 
 enum ds_error
-ds_nc_pop_front(NodeChain *chain, const ds_destructor_fn destroy, void **out)
+ds_nc_pop_front(NodeChain *chain, void **out, const ds_destructor_fn destroy)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
     if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
@@ -409,7 +404,7 @@ ds_nc_pop_front(NodeChain *chain, const ds_destructor_fn destroy, void **out)
 
 
 enum ds_error
-ds_nc_pop_back(NodeChain *chain, const ds_destructor_fn destroy, void **out)
+ds_nc_pop_back(NodeChain *chain, void **out, const ds_destructor_fn destroy)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
     if (!chain->tail) return DS_ERR_EMPTY_STRUCTURE;
@@ -442,8 +437,7 @@ ds_nc_pop_back(NodeChain *chain, const ds_destructor_fn destroy, void **out)
 
 
 enum ds_error
-ds_nc_pop_at(NodeChain *chain, const ds_destructor_fn destroy,
-    void **out, long long index)
+ds_nc_pop_at(NodeChain *chain, void **out, long long index, const ds_destructor_fn destroy)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
     if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
@@ -459,10 +453,10 @@ ds_nc_pop_at(NodeChain *chain, const ds_destructor_fn destroy,
     const size_t uindex = (size_t) index;
 
     // pop the first node
-    if (uindex == 0) return ds_nc_pop_front(chain, destroy, out);
+    if (uindex == 0) return ds_nc_pop_front(chain, out, destroy);
 
     // pop the last node
-    if (uindex == length - 1) return ds_nc_pop_back(chain, destroy, out);
+    if (uindex == length - 1) return ds_nc_pop_back(chain, out, destroy);
 
     // pop a node in between
     Node *prev_node = chain->head;
