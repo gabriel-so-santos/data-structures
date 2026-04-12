@@ -1,5 +1,5 @@
 /**
- * @file    internal/utils.h
+ * @file    utils.h
  * @brief   Internal utilities, types, macros, and functions
  *
  * @author  Gabriel Souza

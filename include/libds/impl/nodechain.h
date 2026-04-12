@@ -1,5 +1,5 @@
 /**
- * @file    impl/nodechain.h
+ * @file    nodechain.h
  * @brief   Low-level node chain management (unsafe for direct use).
  *
  * @warning THIS HEADER IS NOT A PART OF THE PUBLIC API.

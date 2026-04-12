@@ -1,6 +1,10 @@
-//
-// Created by Gabriel Souza on 19/02/2026.
-//
+/**
+ * @file    nodechain.c
+ * @brief   Main management of node chain
+ *
+ * @author  Gabriel Souza
+ * @date    2026-02-19
+ */
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -30,7 +34,7 @@ ds_nc_alloc(const size_t value_size, const size_t value_align)
     new_chain->head = NULL;
     new_chain->tail = NULL;
 
-    new_chain->buffer = NULL;
+    new_chain->chunk_head = NULL;
     new_chain->node_stack = NULL;
     new_chain->stack_size = 0;
 
@@ -58,12 +62,12 @@ ds_nc_free(NodeChain **chain_ref, const ds_destructor_fn destroy)
         }
     }
 
-    Node *buffer = (*chain_ref)->buffer;
-    while (buffer != NULL)
+    Node *chunk = (*chain_ref)->chunk_head;
+    while (chunk != NULL)
     {
-        Node *next = buffer->next;
-        free(buffer);
-        buffer = next;
+        Node *next = chunk->next;
+        free(chunk);
+        chunk = next;
     }
 
     free(*chain_ref);
@@ -213,7 +217,7 @@ ds_nc_bytes(const NodeChain *chain)
     if (!chain) return 0;
 
     size_t chunk_count = 0;
-    const Node *curr_chunk = chain->buffer;
+    const Node *curr_chunk = chain->chunk_head;
     while (curr_chunk != NULL)
     {
         chunk_count++;
@@ -222,9 +226,9 @@ ds_nc_bytes(const NodeChain *chain)
 
     const size_t struct_size = sizeof(NodeChain);
     const size_t nodes_total_size = (chain->length + chain->stack_size) * chain->stride;
-    const size_t buffer_headers_size = chunk_count * sizeof(Node);
+    const size_t chunk_head_headers_size = chunk_count * sizeof(Node);
 
-    return struct_size + nodes_total_size + buffer_headers_size;
+    return struct_size + nodes_total_size + chunk_head_headers_size;
 }
 
 enum ds_error
@@ -307,17 +311,16 @@ enum ds_error
 ds_nc_push_at(NodeChain *chain, void **out, const size_t index)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
-    if (index > chain->length) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
-    // insert the node at beginning
+    // indices can be equals to length here, performing a `push_back()`
+    const size_t len = chain->length;
+    if (index > len) return DS_ERR_INDEX_OUT_OF_BOUNDS;
+
     if (index == 0) return ds_nc_push_front(chain, out);
+    if (index == len) return ds_nc_push_back(chain, out);
 
-    // insert the node at end
-    if (index == chain->length) return ds_nc_push_back(chain, out);
-
-    // insert the node in between
     Node *prev_node = chain->head;
-    for (size_t i = 0; i < index - 1; i++)
+    for (size_t i = 0; i < index -1; i++)
         prev_node = prev_node->next;
 
     Node *new_node = alloc_node(chain);
@@ -338,9 +341,11 @@ enum ds_error
 ds_nc_get_front(const NodeChain *chain, void **out)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
-    if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
 
-    *out = get_data(chain, chain->head);
+    const Node *head = chain->head;
+    if (!head) return DS_ERR_EMPTY_STRUCTURE;
+
+    *out = get_data(chain, head);
     return DS_ERR_NONE;
 }
 
@@ -349,9 +354,11 @@ enum ds_error
 ds_nc_get_back(const NodeChain *chain, void **out)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
-    if (!chain->tail) return DS_ERR_EMPTY_STRUCTURE;
 
-    *out = get_data(chain, chain->tail);
+    const Node *tail = chain->tail;
+    if (!tail) return DS_ERR_EMPTY_STRUCTURE;
+
+    *out = get_data(chain, tail);
     return DS_ERR_NONE;
 }
 
@@ -360,15 +367,14 @@ enum ds_error
 ds_nc_get_at(const NodeChain *chain, void **out, const size_t index)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
-    if (index >= chain->length) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
-    // get the first node
+    const size_t len = chain->length;
+    if (!len) return DS_ERR_EMPTY_STRUCTURE;
+    if (index >= len) return DS_ERR_INDEX_OUT_OF_BOUNDS;
+
     if (index == 0) return ds_nc_get_front(chain, out);
+    if (index == len -1) return ds_nc_get_back(chain, out);
 
-    // get the last node
-    if (index == chain->length -1) return ds_nc_get_back(chain, out);
-
-    // get a node in between
     const Node *node = chain->head;
     for (size_t i = 0; i < index; i++)
         node = node->next;
@@ -408,13 +414,13 @@ ds_nc_pop_back(NodeChain *chain, void **out, const ds_destructor_fn destroy)
 
     Node *old_tail = chain->tail;
 
-    // empty structure case
+    // structure become empty
     if (chain->head == chain->tail)
     {
         chain->head = NULL;
         chain->tail = NULL;
     }
-    // filled structure case
+    // structure that still has nodes
     else
     {
         Node *tail_prev = chain->head;
@@ -437,16 +443,15 @@ enum ds_error
 ds_nc_pop_at(NodeChain *chain, void **out, const size_t index, const ds_destructor_fn destroy)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
-    if (!chain->head) return DS_ERR_EMPTY_STRUCTURE;
-    if (index >= chain->length) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
-    // pop the first node
+    const size_t len = chain->length;
+
+    if (!len) return DS_ERR_EMPTY_STRUCTURE;
+    if (index >= len) return DS_ERR_INDEX_OUT_OF_BOUNDS;
+
     if (index == 0) return ds_nc_pop_front(chain, out, destroy);
+    if (index == len -1) return ds_nc_pop_back(chain, out, destroy);
 
-    // pop the last node
-    if (index == chain->length -1) return ds_nc_pop_back(chain, out, destroy);
-
-    // pop a node in between
     Node *prev_node = chain->head;
     for (size_t i = 0; i < index -1; i++)
         prev_node = prev_node->next;

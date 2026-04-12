@@ -1,5 +1,5 @@
 /**
- * @file    internal/node.h
+ * @file    node.h
  * @brief   Core memory management for node-based data structures
  *
  * This module provides a custom memory allocator with node recycling capabilities.
@@ -16,8 +16,6 @@
 #ifndef LIBDS_INTERNAL_NODE_H
 #define LIBDS_INTERNAL_NODE_H
 
-#include <stddef.h>
-#include <stdlib.h>
 #include "libds/core.h"
 #include "utils.h"
 
@@ -75,7 +73,7 @@ struct ds_node_chain
     Node *head;        /**< First active node (NULL if empty) */
     Node *tail;        /**< Last active node (NULL if empty) */
 
-    Node *buffer;      /**< Linked list of raw memory chunks to be freed upon destruction */
+    Node *chunk_head;  /**< Linked list of raw memory chunks to be freed upon destruction */
     Node *node_stack;  /**< Stack of recycled nodes ready for immediate O(1) use */
     size_t stack_size; /**< Total count of available nodes resting in the node_stack */
 
@@ -123,43 +121,8 @@ get_data(const NodeChain *chain, const Node *node)
  *          decrements @p chain->stack_size.
  *
  */
-static Node *
-alloc_node(NodeChain *chain)
-{
-    if (!chain->node_stack)
-    {
-        // dynamic batch sizing: geometric growth based of current length
-        const size_t batch_size = max(MIN_BATCH_SIZE, chain->length * GROWTH_FACTOR);
-        const size_t chunk_bytes = batch_size * chain->stride;
-
-        Node *chunk_header = (Node *) malloc(sizeof(Node) + chunk_bytes);
-        if (!chunk_header) return NULL;
-
-        chunk_header->next = chain->buffer;
-        chain->buffer = chunk_header;
-
-        byte *memory_chunk = (byte *)(chunk_header + 1);
-
-        for (size_t i = 0; i < batch_size; i++)
-        {
-            Node *cached_node = (Node *)(memory_chunk + (i * chain->stride));
-
-            cached_node->next = chain->node_stack;
-            chain->node_stack = cached_node;
-            chain->stack_size++;
-        }
-    }
-
-    // pop from stack of available nodes
-    Node *new_node = chain->node_stack;
-    chain->node_stack = chain->node_stack->next;
-    new_node->next = NULL;
-
-    chain->stack_size--;
-    chain->length++;
-
-    return new_node;
-}
+Node *
+alloc_node(NodeChain *chain);
 
 
 /**
@@ -178,21 +141,7 @@ alloc_node(NodeChain *chain)
  *
  * @warning The memory at @p node becomes invalid for the user after this call.
  */
-static void
-free_node(NodeChain *chain, Node *node, const ds_destructor_fn destroy)
-{
-    if (destroy)
-    {
-        void *data = get_data(chain, node);
-        destroy(data);
-    }
-
-    // push to stack of available nodes
-    node->next = chain->node_stack;
-    chain->node_stack = node;
-
-    chain->stack_size++;
-    chain->length--;
-}
+void
+free_node(NodeChain *chain, Node *node, const ds_destructor_fn destroy);
 
 #endif //LIBDS_INTERNAL_NODE_H

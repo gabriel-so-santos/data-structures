@@ -6,8 +6,8 @@
  * @date    2026-04-09
  */
 
-#ifndef LIBDS_LIST_DEF_H
-#define LIBDS_LIST_DEF_H
+#ifndef LIBDS_LISTDEF_H
+#define LIBDS_LISTDEF_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -281,4 +281,4 @@
     }                                                                           \
 /* end of macro */
 
-#endif //LIBDS_LIST_DEF_H
+#endif //LIBDS_LISTDEF_H
