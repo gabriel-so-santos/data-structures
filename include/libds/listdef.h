@@ -32,9 +32,9 @@
         size_t value_align = alignof(Type);                                     \
                                                                                 \
         ListType list = {                                                       \
-            .copy     = (CopyFunc),                                             \
-            .destroy  = (DestroyFunc),                                          \
-            ._nodes   = ds_nc_alloc(value_size, value_align)                    \
+            .copy    = (CopyFunc),                                              \
+            .destroy = (DestroyFunc),                                           \
+            ._nodes  = ds_nc_alloc(value_size, value_align)                     \
         };                                                                      \
         return list;                                                            \
     }                                                                           \
@@ -137,6 +137,45 @@
         if (error) return error;                                                \
                                                                                 \
         if (out) *out = *((Type *)data);                                        \
+        return DS_ERR_NONE;                                                     \
+    }                                                                           \
+                                                                                \
+    static inline enum ds_error                                                 \
+    Prefix##_set_front(ListType list, Type value)                               \
+    {                                                                           \
+        void *data = NULL;                                                      \
+        enum ds_error error = LIBDS_CHECK(                                      \
+            ds_nc_get_front(list._nodes, &data)                                 \
+        );                                                                      \
+        if (error) return error;                                                \
+                                                                                \
+        *((Type *)data) = value;                                                \
+        return DS_ERR_NONE;                                                     \
+    }                                                                           \
+                                                                                \
+    static inline enum ds_error                                                 \
+    Prefix##_set_back(ListType list, Type value)                                \
+    {                                                                           \
+        void *data = NULL;                                                      \
+        enum ds_error error = LIBDS_CHECK(                                      \
+            ds_nc_get_back(list._nodes, &data)                                  \
+        );                                                                      \
+        if (error) return error;                                                \
+                                                                                \
+        *((Type *)data) = value;                                                \
+        return DS_ERR_NONE;                                                     \
+    }                                                                           \
+                                                                                \
+    static inline enum ds_error                                                 \
+    Prefix##_set_at(ListType list, Type value, const size_t index)              \
+    {                                                                           \
+        void *data = NULL;                                                      \
+        enum ds_error error = LIBDS_CHECK(                                      \
+            ds_nc_get_at(list._nodes, &data, index)                             \
+        );                                                                      \
+        if (error) return error;                                                \
+                                                                                \
+        *((Type *)data) = value;                                                \
         return DS_ERR_NONE;                                                     \
     }                                                                           \
                                                                                 \
