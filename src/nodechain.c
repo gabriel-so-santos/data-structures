@@ -13,6 +13,9 @@
 
 #include "libds/core.h"
 #include "libds/impl/nodechain.h"
+
+#include <stdalign.h>
+
 #include "internal/utils.h"
 #include "internal/node.h"
 
@@ -24,12 +27,21 @@
 NodeChain *
 ds_nc_alloc(const size_t value_size, const size_t value_align)
 {
+    if (!value_size || !value_align) return NULL;
+    if (!is_power_of_two(value_align)) return NULL;
+    if (value_size % value_align != 0) return NULL;
+
+    const size_t max_align = max(alignof(Node), value_align);
+    const size_t payload_offset = align_value(sizeof(Node), value_align);
+
+    // integer overflow check
+    if (payload_offset + value_size < value_size) return NULL;
+
+    const size_t node_stride = align_value(payload_offset + value_size, max_align);
+
+
     NodeChain *new_chain = (NodeChain *) malloc(sizeof(NodeChain));
     if (!new_chain) return NULL;
-
-    const size_t max_align = max(sizeof(Node), value_align);
-    const size_t payload_offset = align_value(sizeof(Node), value_align);
-    const size_t node_stride = align_value(payload_offset + value_size, max_align);
 
     new_chain->head = NULL;
     new_chain->tail = NULL;

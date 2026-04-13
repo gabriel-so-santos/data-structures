@@ -56,4 +56,15 @@ align_value(const size_t value, const size_t align)
     return (value + align -1) & ~(align -1);
 }
 
+/**
+ * @brief   Checks if a given value is a strict power of two.
+ * @param   value The value to check.
+ * @return  true if the value is a power of two (1, 2, 4, 8, ...), false otherwise.
+ */
+static inline bool
+is_power_of_two(const size_t value)
+{
+    return (value > 0) && ((value & (value - 1)) == 0);
+}
+
 #endif //LIBDS_INTERNAL_UTILS_H
