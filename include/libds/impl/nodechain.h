@@ -35,7 +35,8 @@
  * @param[in]   value_size   Size (in bytes) of each stored value.
  * @param[in]   value_align  Alignment requirement of the stored value.
  *
- * @return  Pointer to the new chain, or NULL on allocation failure.
+ * @return  Pointer to the new chain, or NULL if @p value_size / @p value_align
+ * are invalid or on allocation failure.
  *
  * @details Computes the node stride and data offset based on memory alignment.
  * The chain manages a pool of fixed‑size nodes that can be recycled.
@@ -66,21 +67,23 @@ ds_nc_free(struct ds_node_chain **chain_ref, ds_destructor_fn destroy);
 /**
  * @brief   Removes all active nodes but retains the allocated memory pool.
  *
- * @param[in]  chain    Pointer to the chain.
- * @param[in]  destroy  Optional destructor for each active element (may be NULL).
+ * @param[in]  chain         Pointer to the chain.
+ * @param[in]  destroy       Optional destructor for each active element (may be NULL).
+ * @param[in]  is_deep_clear Flag to allow or not recycling nodes
+ *                           (`true` to free, `false` to recycle).
  *
  * @return  DS_ERR_NONE on success, or
  * DS_ERR_NULL_POINTER if pointer arguments are invalid.
  *
- * @details All active nodes are rapidly shifted to the free stack for recycling.
- * No heap memory is freed, ensuring subsequent insertions require zero allocations.
+ * @note If @p is_deep_clear == `false`, all active nodes are rapidly shifted to the
+ * free stack for recycling, ensuring subsequent insertions require zero allocations.
  *
  * @par Complexity
  * - Time:  O(1)
  * - Space: O(1)
  */
 enum ds_error
-ds_nc_clear(struct ds_node_chain *chain, ds_destructor_fn destroy);
+ds_nc_clear(struct ds_node_chain *chain, ds_destructor_fn destroy, bool is_deep_clear);
 
 /**
  * @brief   Deep copies all nodes from a source chain to a destination chain.

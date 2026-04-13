@@ -51,7 +51,15 @@
     Prefix##_clear(ListType list)                                               \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_clear(list._nodes, list.destroy)                              \
+            ds_nc_clear(list._nodes, list.destroy, false)                       \
+        );                                                                      \
+    }                                                                           \
+                                                                                \
+    static inline enum ds_error                                                 \
+    Prefix##_deep_clear(ListType list)                                          \
+    {                                                                           \
+        return LIBDS_CHECK(                                                     \
+            ds_nc_clear(list._nodes, list.destroy, true)                        \
         );                                                                      \
     }                                                                           \
                                                                                 \

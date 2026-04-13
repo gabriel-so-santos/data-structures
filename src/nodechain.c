@@ -6,8 +6,11 @@
  * operations. It is strictly type-agnostic, operating on raw byte strides and
  * memory alignments to manage a geometric, dynamically growing recycling pool.
  *
- * @warning This implementation operates entirely without type-safety and
- * does NOT PROVIDE THREAD-SAFETY.
+ * @note The length of the chain is internally updated inside ´alloc_node()`
+ * and `free_node()`.
+ *
+ * @warning This implementation operates entirely without direct type-safety
+ * and does NOT PROVIDE THREAD-SAFETY.
  *
  * @author  Gabriel Souza
  * @date    2026-02-19
@@ -42,7 +45,7 @@ ds_nc_alloc(const size_t value_size, const size_t value_align)
     const size_t payload_offset = align_value(sizeof(Node), value_align);
 
     // integer overflow check
-    if (payload_offset + value_size < value_size) return NULL;
+    if ((payload_offset + value_size) < value_size) return NULL;
 
     const size_t node_stride = align_value(payload_offset + value_size, max_align);
 
@@ -96,10 +99,13 @@ ds_nc_free(NodeChain **chain_ref, const ds_destructor_fn destroy)
 
 
 enum ds_error
-ds_nc_clear(NodeChain *chain, const ds_destructor_fn destroy)
+ds_nc_clear(NodeChain *chain, const ds_destructor_fn destroy, const bool is_deep_clear)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
-    if (chain->length == 0) return DS_ERR_NONE;
+
+    // earlier return when there's no work to do
+    if ((chain->length == 0) && (!is_deep_clear || chain->chunk_head == NULL))
+        return DS_ERR_NONE;
 
     if (destroy)
     {
@@ -112,10 +118,28 @@ ds_nc_clear(NodeChain *chain, const ds_destructor_fn destroy)
         }
     }
 
-    // push to stack of available nodes
-    chain->tail->next = chain->node_stack;
-    chain->node_stack = chain->head;
-    chain->stack_size += chain->length;
+    if (is_deep_clear)
+    {
+        // clear the memory chunks and stack
+        Node *chunk = chain->chunk_head;
+        while (chunk != NULL)
+        {
+            Node *next = chunk->next;
+            free(chunk);
+            chunk = next;
+        }
+
+        chain->chunk_head = NULL;
+        chain->node_stack = NULL;
+        chain->stack_size = 0;
+    }
+    else
+    {
+        // push to stack of available nodes
+        chain->tail->next = chain->node_stack;
+        chain->node_stack = chain->head;
+        chain->stack_size += chain->length;
+    }
 
     chain->head = NULL;
     chain->tail = NULL;
@@ -147,7 +171,7 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
         if (!new_node)
         {
             // rollback
-            ds_nc_clear(dst_chain, destroy);
+            ds_nc_clear(dst_chain, destroy, false);
             dst_chain->head = (Node *)old_head;
             dst_chain->tail = (Node *)old_tail;
             dst_chain->length = old_length;
@@ -164,11 +188,11 @@ ds_nc_copy(NodeChain *dst_chain, const NodeChain *src_chain, const size_t value_
         {
             if ( !copy(dst_value, src_value) )
             {
-                // the current new_node is invalid, drop it without destroying
+                // the current new node is invalid, drop it without destroying
                 free_node(dst_chain, new_node, NULL);
 
                 // rollback
-                ds_nc_clear(dst_chain, destroy);
+                ds_nc_clear(dst_chain, destroy, false);
                 dst_chain->head = (Node *)old_head;
                 dst_chain->tail = (Node *)old_tail;
                 dst_chain->length = old_length;
@@ -331,7 +355,7 @@ ds_nc_push_at(NodeChain *chain, void **out, const size_t index)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
 
-    // indices can be equals to length here, performing a `push_back()`
+    // indices can be equal to length here, performing a `push_back()`
     const size_t len = chain->length;
     if (index > len) return DS_ERR_INDEX_OUT_OF_BOUNDS;
 
@@ -433,13 +457,13 @@ ds_nc_pop_back(NodeChain *chain, void **out, const ds_destructor_fn destroy)
 
     Node *old_tail = chain->tail;
 
-    // structure become empty
+    // if the structure became empty
     if (chain->head == chain->tail)
     {
         chain->head = NULL;
         chain->tail = NULL;
     }
-    // structure that still has nodes
+    // if the structure still has nodes
     else
     {
         Node *tail_prev = chain->head;
