@@ -1,6 +1,13 @@
 /**
  * @file    nodechain.c
- * @brief   Main management of node chain
+ * @brief   Core implementation of the type-agnostic singly-linked list engine.
+ *
+ * This module provides the internal, low-level mechanics for singly-linked list
+ * operations. It is strictly type-agnostic, operating on raw byte strides and
+ * memory alignments to manage a geometric, dynamically growing recycling pool.
+ *
+ * @warning This implementation operates entirely without type-safety and
+ * does NOT PROVIDE THREAD-SAFETY.
  *
  * @author  Gabriel Souza
  * @date    2026-02-19
