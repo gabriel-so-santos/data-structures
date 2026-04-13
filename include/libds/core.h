@@ -1,6 +1,11 @@
-//
-// Created by Gabriel Souza on 21/02/2026.
-//
+/**
+ * @file core.h
+ *
+ * @brief
+ *
+ * @author Gabriel Souza
+ * @date   2026-02-21
+ */
 
 #ifndef LIBDS_CORE_H
 #define LIBDS_CORE_H
@@ -85,7 +90,6 @@
 /**
  * internal node chain opaque struct
  */
-
 struct ds_node_chain;
 
 /**

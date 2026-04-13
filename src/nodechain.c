@@ -6,7 +6,7 @@
  * operations. It is strictly type-agnostic, operating on raw byte strides and
  * memory alignments to manage a geometric, dynamically growing recycling pool.
  *
- * @note The length of the chain is internally updated inside ´alloc_node()`
+ * @note The length of the chain is internally updated inside `alloc_node()`
  * and `free_node()`.
  *
  * @warning This implementation operates entirely without direct type-safety
@@ -351,7 +351,7 @@ ds_nc_push_back(NodeChain *chain, void **out)
 
 
 enum ds_error
-ds_nc_push_at(NodeChain *chain, void **out, const size_t index)
+ds_nc_push_at(NodeChain *chain, const size_t index, void **out)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
 
@@ -407,7 +407,7 @@ ds_nc_get_back(const NodeChain *chain, void **out)
 
 
 enum ds_error
-ds_nc_get_at(const NodeChain *chain, void **out, const size_t index)
+ds_nc_get_at(const NodeChain *chain, const size_t index, void **out)
 {
     if (!chain || !out) return DS_ERR_NULL_POINTER;
 
@@ -483,7 +483,7 @@ ds_nc_pop_back(NodeChain *chain, void **out, const ds_destructor_fn destroy)
 
 
 enum ds_error
-ds_nc_pop_at(NodeChain *chain, void **out, const size_t index, const ds_destructor_fn destroy)
+ds_nc_pop_at(NodeChain *chain, const size_t index, void **out, const ds_destructor_fn destroy)
 {
     if (!chain) return DS_ERR_NULL_POINTER;
 

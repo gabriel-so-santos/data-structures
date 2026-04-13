@@ -136,11 +136,11 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_get_at(ListType list, Type *out, const size_t index)               \
+    Prefix##_get_at(ListType list, const size_t index, Type *out)               \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_get_at(list._nodes, &data, index)                             \
+            ds_nc_get_at(list._nodes, index, &data)                             \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
@@ -175,11 +175,11 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_set_at(ListType list, Type value, const size_t index)              \
+    Prefix##_set_at(ListType list, const size_t index, Type value)              \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_get_at(list._nodes, &data, index)                             \
+            ds_nc_get_at(list._nodes, index, &data)                             \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
@@ -244,11 +244,11 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_push_at(ListType list, Type value, const size_t index)             \
+    Prefix##_push_at(ListType list, const size_t index, Type value)             \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_push_at(list._nodes, &data, index)                            \
+            ds_nc_push_at(list._nodes, index, &data)                            \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
@@ -258,7 +258,7 @@
         {                                                                       \
             if ( !list.copy(data, &value) )                                     \
             {                                                                   \
-                ds_nc_pop_at(list._nodes, NULL, index, NULL);                   \
+                ds_nc_pop_at(list._nodes, index, NULL, NULL);                   \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -285,7 +285,7 @@
     Prefix##_drop_at(ListType list, const size_t index)                         \
     {                                                                           \
         return LIBDS_CHECK(                                                     \
-            ds_nc_pop_at(list._nodes, NULL, index, list.destroy)                \
+            ds_nc_pop_at(list._nodes, index, NULL, list.destroy)                \
         );                                                                      \
     }                                                                           \
     static inline enum ds_error                                                 \
@@ -315,11 +315,11 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_pop_at(ListType list, Type *out, const size_t index)               \
+    Prefix##_pop_at(ListType list, const size_t index, Type *out)               \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_pop_at(list._nodes, &data, index, list.destroy)               \
+            ds_nc_pop_at(list._nodes, index, &data, list.destroy)               \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \

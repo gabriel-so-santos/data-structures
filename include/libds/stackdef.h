@@ -128,11 +128,11 @@
     }                                                                           \
                                                                                 \
     static inline enum ds_error                                                 \
-    Prefix##_get_at(StackType stack, Type *out, const size_t index)             \
+    Prefix##_get_at(StackType stack, const size_t index, Type *out)             \
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_get_at(stack._nodes, &data, index)                            \
+            ds_nc_get_at(stack._nodes, index, &data)                            \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \

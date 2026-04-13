@@ -10,7 +10,7 @@
 #define LIBDS_INTERNAL_UTILS_H
 
 #include <stddef.h>
-
+#include <stdbool.h>
 
 /**
  * @brief   Byte type for pointer arithmetic and byte-level operations
