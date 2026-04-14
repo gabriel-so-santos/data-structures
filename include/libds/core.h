@@ -1,10 +1,14 @@
 /**
  * @file core.h
  *
- * @brief
+ * @brief   Core configuration, error handling, and fundamental contracts
+ *          for the libds data structure library.
  *
- * @author Gabriel Souza
- * @date   2026-02-21
+ * Provides compile-time configuration flags, error handling mechanisms,
+ * and function contracts used across modules.
+ *
+ * @author  Gabriel Souza
+ * @date    2026-02-21
  */
 
 #ifndef LIBDS_CORE_H
@@ -16,16 +20,15 @@
 
 /**
  * @def     LIBDS_ENABLE_ERROR_PRINT
- * @brief   Enables or disables automatic error logging to stderr.
+ * @brief   Controls automatic error reporting to stderr.
  *
- * When defined to a non-zero value, internal errors intercepted by the library
- * will be printed to standard error (`stderr`). The log includes the error type,
- * file, line, and function where the failure occurred.
+ * When enabled (non-zero), any error intercepted by the library will be
+ * reported to `stderr`, including contextual diagnostics such as the
+ * failed expression, source file, line number, and function name.
  *
- * @note    Defaults to 1 (enabled). Define this as 0 to silence library output
- *          and give no error calling overhead.
- *
- * @note    The functions will return error codes regardless of this setting.
+ * @note    Defaults to 1 (enabled).
+ * @note    Disabling removes all logging overhead but does not affect
+ *          error propagation—functions, they will still return error codes.
  */
 #ifndef LIBDS_ENABLE_ERROR_PRINT
 #define LIBDS_ENABLE_ERROR_PRINT 1
@@ -34,14 +37,14 @@
 
 /**
  * @def     LIBDS_ENABLE_EXIT_ON_FAIL
- * @brief   Enables or disables immediate program termination on error.
+ * @brief   Enables fail-fast behavior on internal errors.
  *
- * When defined to a non-zero value, any error intercepted by the library will
- * cause the application to immediately terminate via `exit(EXIT_FAILURE)`.
- * This is highly useful for strict debug environments where data structure
- * failures should fail fast.
+ * When enabled (non-zero), the library will immediately terminate the
+ * program via `exit(EXIT_FAILURE)` whenever an error is detected.
  *
- * @note    Defaults to 0 (disabled). Can be combined with LIBDS_ENABLE_ERROR_PRINT.
+ * @note    Defaults to 0 (disabled).
+ * @note    Can be combined with LIBDS_ENABLE_ERROR_PRINT for diagnostics
+ *          prior to termination.
  */
 #ifndef LIBDS_ENABLE_EXIT_ON_FAIL
 #define LIBDS_ENABLE_EXIT_ON_FAIL 0
@@ -50,13 +53,15 @@
 
 /**
  * @def     LIBDS_NC_MIN_BATCH_SIZE
- * @brief   Minimum number of nodes to allocate in a batch.
+ * @brief   Minimum allocation size for node batches.
  *
- * When no free nodes are available, the allocator creates new nodes in batches.
- * This value sets the lower bound for batch size.
- * This value must be a positive integer number.
+ * Defines the lower bound on how many nodes are allocated when the
+ * allocator needs to grow. This prevents excessively small allocations
+ * during early usage.
  *
- * @note    batch_size = max(MIN_BATCH_SIZE, length * GROWTH_FACTOR).
+ * @note    Must be a strictly positive integer.
+ * @note    Effective batch size is:
+ *          max(MIN_BATCH_SIZE, length * GROWTH_FACTOR)
  */
 #ifndef LIBDS_NC_MIN_BATCH_SIZE
 #define LIBDS_NC_MIN_BATCH_SIZE 8
@@ -65,16 +70,18 @@
 
 /**
  * @def     LIBDS_NC_GROWTH_FACTOR
- * @brief   Growth factor for dynamic batch sizing.
+ * @brief   Geometric growth factor for node allocation.
  *
- * Determines the dynamic batch size of allocated nodes.
- * This allows the allocator to scale with the data structure size.
- * This value must be a float.
+ * Controls how the allocator scales as the data structure grows.
+ * Larger values increase allocation size more aggressively, reducing
+ * allocation frequency at the cost of higher memory usage.
  *
- * @note    batch_size = max(MIN_BATCH_SIZE, length * GROWTH_FACTOR).
+ * @note    Must be a non-negative floating-point value.
+ * @note    Effective batch size is:
+ *          max(MIN_BATCH_SIZE, length * GROWTH_FACTOR)
  */
 #ifndef LIBDS_NC_GROWTH_FACTOR
-#define LIBDS_NC_GROWTH_FACTOR 0.125f
+#define LIBDS_NC_GROWTH_FACTOR 0.5f
 #endif
 
 #if LIBDS_ENABLE_ERROR_PRINT || LIBDS_ENABLE_EXIT_ON_FAIL
@@ -88,57 +95,93 @@
 #define LIBDS_TOSTRING(Name) LIBDS_STRINGIFY(Name)
 
 /**
- * internal node chain opaque struct
+ * @struct  ds_node_chain
+ * @brief   Opaque handle for the internal node allocator.
+ *
+ * This structure manages memory layout, allocation strategy, and node
+ * lifecycle for all node-based data structures in the library.
  */
 struct ds_node_chain;
 
 /**
+ * @enum    ds_error
+ * @brief   Standard error codes returned by library operations.
  *
+ * All primary API functions return one of these values to indicate success
+ * or failure. Utility functions that cannot fail may return values directly.
  */
 enum ds_error
 {
-    DS_ERR_NONE = 0,            /* No error (will be always 0) */
-    DS_ERR_ALLOCATION_FAILED,   /* Memory allocation failed */
-    DS_ERR_NULL_POINTER,        /* Invalid null pointer provided */
-    DS_ERR_INDEX_OUT_OF_BOUNDS, /* Index out of bounds */
-    DS_ERR_EMPTY_STRUCTURE,     /* Invalid operation on an empty structure */
-    DS_ERR_COPY_FAILED,         /* Custom copy function failed */
+   DS_ERR_NONE = 0,            /**< Operation completed successfully */
+   DS_ERR_ALLOCATION_FAILED,   /**< Memory allocation failed */
+   DS_ERR_NULL_POINTER,        /**< Invalid null pointer argument */
+   DS_ERR_INDEX_OUT_OF_BOUNDS, /**< Index exceeds valid range */
+   DS_ERR_EMPTY_STRUCTURE,     /**< Operation invalid on empty structure */
+   DS_ERR_COPY_FAILED,         /**< User-defined copy operation failed */
 };
 
 /**
- * @brief Destructor function contract.
+ * @brief   Destructor function contract for stored values.
  *
- * Expectation: The `value` pointer contains fully initialized valid data.
+ * @param   value Pointer to a fully initialized element.
  *
- * Responsibility: It must free any dynamic memory allocated *inside* the
- * structure (e.g., nested pointers, strings).
+ * The destructor is responsible for releasing any resources owned by the
+ * value (e.g., heap-allocated fields, internal buffers).
  *
- * @note It should NOT free the `value` pointer itself, as the library
- * manages the node's memory.
+ * @note    The memory pointed to by `value` itself is managed by the library
+ *          and must NOT be freed by this function.
+ *
+ * @warning The function must assume `value` is valid and initialized.
  */
-typedef void (*ds_destructor_fn)(void *);
+typedef void (*ds_destructor_fn)(void *value);
 
 /**
- * @brief Copier function contract.
+ * @brief   Copier function contract for value duplication.
  *
- * Expectation: `src_value` is fully valid. `dst_value` is uninitialized
- * raw memory provided by the library.
+ * @param   dst_value Pointer to uninitialized destination memory.
+ * @param   src_value Pointer to a valid source value.
  *
- * Responsibility: Perform a deep copy of `src_value` into `dst_value`.
+ * The function must perform a deep copy from `src_value` into `dst_value`,
+ * fully initializing the destination.
  *
- * @return `true` on success, `false` on failure
- * - On Success: The library will assume `dst_value` is now fully valid.
- * - On Failure: If the copy fails halfway through (e.g., a nested malloc fails),
- * the function MUST clean up any memory it already allocated inside `dst_value`,
- * leave `dst_value` safely abandoned.
+ * @return  true  if the copy succeeded
+ * @return  false if the copy failed
  *
- * @note The library will NOT call the destructor on `dst_value` if this returns `false`.
+ * @failure If the function fails after partially allocating resources,
+ *          it MUST clean up any intermediate allocations and leave
+ *          `dst_value` in a safely discardable state.
+ *
+ * @note    On failure, the library will NOT invoke the destructor on
+ *          `dst_value`.
  */
 typedef bool (*ds_copier_fn)(void *dst_value, const void *src_value);
 
+/**
+ * @brief   Converts an error code into a string.
+ *
+ * @param   err Error code.
+ * @return  Constant string describing the error.
+ */
 const char *
 ds_err_to_string(enum ds_error err);
 
+/**
+ * @brief   Centralized error handling hook.
+ *
+ * @param   err   Error code returned by an operation.
+ * @param   expr  Stringified expression that produced the error.
+ * @param   file  Source file where the error occurred.
+ * @param   line  Line number of the failure.
+ * @param   func  Function name where the error occurred.
+ *
+ * @return  The same error code passed in.
+ *
+ * Depending on configuration macros, this function may:
+ * - Log diagnostic information to stderr
+ * - Terminate the program
+ *
+ * @note    Intended to be used through the LIBDS_CHECK macro.
+ */
 enum ds_error
 ds_handle_err(enum ds_error err, const char *expr, const char *file, int line, const char *func);
 

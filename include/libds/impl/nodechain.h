@@ -215,7 +215,7 @@ ds_nc_get_back(const struct ds_node_chain *chain, void **out);
  * @brief   Retrieves a pointer to the data payload of the node at a given index.
  *
  * @param[in]   chain  Pointer to the chain.
- * @param[in]   index  Zero‑based position (range: `0` to `length -1`).
+ * @param[in]   index  Zero‑based position. Range: [0, length -1].
  * @param[out]  out    Pointer updated to point at the target data segment.
  *
  * @return  DS_ERR_NONE on success,
@@ -278,7 +278,7 @@ ds_nc_push_back(struct ds_node_chain *chain, void **out);
  * @brief   Allocates and inserts a new node at the specified index.
  *
  * @param[in,out] chain  Pointer to the chain.
- * @param[in]     index  Zero‑based position (range: `0` to `length`).
+ * @param[in]     index  Zero‑based position. Range: [0, length].
  * @param[out]    out    Pointer updated to the newly allocated data payload area.
  *
  * @return  DS_ERR_NONE on success,
@@ -343,7 +343,7 @@ ds_nc_pop_back(struct ds_node_chain *chain, void **out, ds_destructor_fn destroy
  * @brief   Removes the node at the specified index and returns it to the recycling pool.
  *
  * @param[in,out]   chain   Pointer to the chain.
- * @param[in]       index   Zero‑based position (range: `0` to `length -1`).
+ * @param[in]       index   Zero‑based position. Range: [0, length -1].
  * @param[out]      out     Optional output pointer to view data before destruction (may be NULL).
  * @param[in]       destroy Optional destructor for the removed element (may be NULL).
  *

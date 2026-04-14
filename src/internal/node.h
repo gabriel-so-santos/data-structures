@@ -24,7 +24,7 @@
 #endif
 
 #ifndef LIBDS_NC_GROWTH_FACTOR
-#define LIBDS_NC_GROWTH_FACTOR 0.125f
+#define LIBDS_NC_GROWTH_FACTOR 0.5f
 #endif
 
 /**
