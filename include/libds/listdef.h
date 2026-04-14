@@ -17,9 +17,9 @@
 #include "impl/nodechain.h"
 #include "impl/contdef.h"
 
-#define LIBDS_DEFINE_LIST(Type, ListType, Prefix, CopyFunc, DestroyFunc)        \
+#define LIBDS_DEF_LIST(Type, ListType, Prefix, CopyFunc, DestroyFunc)           \
                                                                                 \
-    LIBDS_DEFINE_CONTAINER(Type, ListType, Prefix, CopyFunc, DestroyFunc)       \
+    LIBDS_DEF_CONTAINER(Type, ListType, Prefix, CopyFunc, DestroyFunc)          \
                                                                                 \
     static inline enum ds_error                                                 \
     Prefix##_reverse(ListType list)                                             \

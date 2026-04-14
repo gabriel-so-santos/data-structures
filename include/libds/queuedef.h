@@ -17,9 +17,9 @@
 #include "impl/nodechain.h"
 #include "impl/contdef.h"
 
-#define LIBDS_DEFINE_QUEUE(Type, QueueType, Prefix, CopyFunc, DestroyFunc)      \
+#define LIBDS_DEF_QUEUE(Type, QueueType, Prefix, CopyFunc, DestroyFunc)         \
                                                                                 \
-    LIBDS_DEFINE_CONTAINER(Type, QueueType, Prefix, CopyFunc, DestroyFunc)      \
+    LIBDS_DEF_CONTAINER(Type, QueueType, Prefix, CopyFunc, DestroyFunc)         \
                                                                                 \
     static inline enum ds_error                                                 \
     Prefix##_enqueue(QueueType queue, Type value)                               \

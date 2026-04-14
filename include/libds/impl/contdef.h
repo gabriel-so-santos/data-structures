@@ -16,7 +16,7 @@
 #include "libds/core.h"
 #include "nodechain.h"
 
-#define LIBDS_DEFINE_CONTAINER(Type, ContainerType, Prefix,                     \
+#define LIBDS_DEF_CONTAINER(Type, ContainerType, Prefix,                        \
     CopyFunc, DestroyFunc)                                                      \
                                                                                 \
     typedef struct ContainerType                                                \
