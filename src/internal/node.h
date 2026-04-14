@@ -61,6 +61,35 @@ typedef struct node Node;
 
 
 /**
+ * @struct  chunk
+ * @brief   Intrusive header for tracking allocated memory blocks.
+ *
+ * Represents a raw memory region (chunk) obtained from the heap, which is
+ * internally subdivided into multiple fixed-size node slots. Each chunk is
+ * linked into a singly-linked list maintained by the node chain, allowing
+ * efficient bulk deallocation.
+ *
+ * Memory layout of a chunk:
+ *      [Chunk Header]
+ *      [ Node Slot 0 ]
+ *      [ Node Slot 1 ]
+ *      [ Node Slot 2 ]
+ *      ...
+ *
+ * @note    The chunk header occupies the first slot-sized region to preserve
+ *          alignment guarantees for subsequent node placements.
+ *
+ * @warning The chunk does not store its size. Deallocation relies on tracking
+ *          the head of the chunk list and freeing each block as a whole.
+ */
+struct chunk
+{
+    struct chunk *next; /**< Pointer to the next allocated chunk */
+};
+typedef struct chunk Chunk;
+
+
+/**
  * @struct  ds_node_chain
  * @brief   State controller for node-based data structures.
  *
@@ -73,7 +102,7 @@ struct ds_node_chain
     Node *head;        /**< First active node (NULL if empty) */
     Node *tail;        /**< Last active node (NULL if empty) */
 
-    Node *chunk_head;  /**< Linked list of raw memory chunks to be freed upon destruction */
+    Chunk *chunk_head;  /**< Linked list of raw memory chunks to be freed upon destruction */
     Node *node_stack;  /**< Stack of recycled nodes ready for immediate O(1) use */
     size_t stack_size; /**< Total count of available nodes resting in the node_stack */
 

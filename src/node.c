@@ -18,21 +18,26 @@ alloc_node(NodeChain *chain)
     {
         // dynamic batch sizing: geometric growth based of current length
         const size_t batch_size = max(MIN_BATCH_SIZE, chain->length * GROWTH_FACTOR);
-        const size_t chunk_bytes = batch_size * chain->stride;
 
-        Node *new_chunk = (Node *) malloc(sizeof(Node) + chunk_bytes);
+        // one extra slot for the chunk header
+        const size_t total_size = (batch_size +1) * chain->stride;
+
+        Chunk *new_chunk = (Chunk *) malloc(total_size);
         if (!new_chunk) return NULL;
 
         // push to liked chunks
         new_chunk->next = chain->chunk_head;
         chain->chunk_head = new_chunk;
 
-        byte *memory_chunk = (byte *)(new_chunk + 1);
+        // skip the header of the chunk
+        byte *memory_chunk = (byte *)new_chunk + chain->stride;
 
         for (size_t i = 0; i < batch_size; i++)
         {
+            // slice the chunk in `chain->stride` spaced slots
             Node *cached_node = (Node *)(memory_chunk + (i * chain->stride));
 
+            // send node to stack
             cached_node->next = chain->node_stack;
             chain->node_stack = cached_node;
             chain->stack_size++;

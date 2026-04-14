@@ -38,6 +38,7 @@ NodeChain *
 ds_nc_alloc(const size_t value_size, const size_t value_align)
 {
     if (!value_size || !value_align) return NULL;
+    if (value_align > alignof(max_align_t)) return NULL;
     if (!is_power_of_two(value_align)) return NULL;
     if (value_size % value_align != 0) return NULL;
 
@@ -48,7 +49,6 @@ ds_nc_alloc(const size_t value_size, const size_t value_align)
     if ((payload_offset + value_size) < value_size) return NULL;
 
     const size_t node_stride = align_value(payload_offset + value_size, max_align);
-
 
     NodeChain *new_chain = (NodeChain *) malloc(sizeof(NodeChain));
     if (!new_chain) return NULL;
@@ -84,10 +84,10 @@ ds_nc_free(NodeChain **chain_ref, const ds_destructor_fn destroy)
         }
     }
 
-    Node *chunk = (*chain_ref)->chunk_head;
+    Chunk *chunk = (*chain_ref)->chunk_head;
     while (chunk != NULL)
     {
-        Node *next = chunk->next;
+        Chunk *next = chunk->next;
         free(chunk);
         chunk = next;
     }
@@ -121,10 +121,10 @@ ds_nc_clear(NodeChain *chain, const ds_destructor_fn destroy, const bool is_deep
     if (is_deep_clear)
     {
         // clear the memory chunks and stack
-        Node *chunk = chain->chunk_head;
+        Chunk *chunk = chain->chunk_head;
         while (chunk != NULL)
         {
-            Node *next = chunk->next;
+            Chunk *next = chunk->next;
             free(chunk);
             chunk = next;
         }
@@ -260,7 +260,7 @@ ds_nc_bytes(const NodeChain *chain)
     if (!chain) return 0;
 
     size_t chunk_count = 0;
-    const Node *curr_chunk = chain->chunk_head;
+    const Chunk *curr_chunk = chain->chunk_head;
     while (curr_chunk != NULL)
     {
         chunk_count++;
