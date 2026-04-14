@@ -48,7 +48,7 @@
     {                                                                           \
         void *data = NULL;                                                      \
         enum ds_error error = LIBDS_CHECK(                                      \
-            ds_nc_pop_back(queue._nodes, &data, queue.destroy)                  \
+            ds_nc_pop_front(queue._nodes, &data, queue.destroy)                 \
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
