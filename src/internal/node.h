@@ -47,9 +47,9 @@ static const float GROWTH_FACTOR = (LIBDS_NC_GROWTH_FACTOR);
  *
  * Acts as a transparent header preceding the actual user data. The total
  * memory allocated per slot is:
- *      [Node Header]
- *      [  Padding  ]
- *      [ User Data ]
+ *      [ Node Header ]
+ *      [   Padding   ]
+ *      [  User Data  ]
  *
  * @note Type alignment is handled by the node chain structure.
  */
@@ -70,11 +70,11 @@ typedef struct node Node;
  * efficient bulk deallocation.
  *
  * Memory layout of a chunk:
- *      [Chunk Header]
- *      [ Node Slot 0 ]
- *      [ Node Slot 1 ]
- *      [ Node Slot 2 ]
- *      ...
+ *      [ Chunk Header ]
+ *      [ Node Slot 1  ]
+ *      [ Node Slot 2  ]
+ *      [ Node Slot 3  ]
+ *            ...
  *
  * @note    The chunk header occupies the first slot-sized region to preserve
  *          alignment guarantees for subsequent node placements.
