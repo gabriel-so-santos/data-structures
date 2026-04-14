@@ -250,7 +250,7 @@ bool
 ds_nc_is_empty(const NodeChain *chain)
 {
     if (!chain) return true;
-    return chain->length == 0;
+    return !chain->head && !chain->tail;
 }
 
 
