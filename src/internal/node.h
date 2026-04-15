@@ -77,7 +77,8 @@ typedef struct node Node;
  *            ...
  *
  * @note    The chunk header occupies the first slot-sized region to preserve
- *          alignment guarantees for subsequent node placements.
+ *          alignment guarantees for subsequent node placements, it occupies
+ *          the same space of a slot.
  *
  * @warning The chunk does not store its size. Deallocation relies on tracking
  *          the head of the chunk list and freeing each block as a whole.
