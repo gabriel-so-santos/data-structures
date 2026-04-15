@@ -444,9 +444,14 @@ ds_nc_pop_front(NodeChain *chain, void **out, const ds_destructor_fn destroy)
     // if the structure is now empty, tail must be set to NULL
     if (!chain->head) chain->tail = NULL;
 
-    if (out) *out = get_data(chain, old_head);
-
-    free_node(chain, old_head, destroy);
+    if (!out)
+        free_node(chain, old_head, destroy);
+    else
+    {
+        // ownership transferred to `out`
+        *out = get_data(chain, old_head);
+        free_node(chain, old_head, NULL);
+    }
     return DS_ERR_NONE;
 }
 
@@ -477,9 +482,14 @@ ds_nc_pop_back(NodeChain *chain, void **out, const ds_destructor_fn destroy)
         chain->tail = tail_prev;
     }
 
-    if (out) *out = get_data(chain, old_tail);
-
-    free_node(chain, old_tail, destroy);
+    if (!out)
+        free_node(chain, old_tail, destroy);
+    else
+    {
+        // ownership transferred to `out`
+        *out = get_data(chain, old_tail);
+        free_node(chain, old_tail, NULL);
+    }
     return DS_ERR_NONE;
 }
 
@@ -504,8 +514,13 @@ ds_nc_pop_at(NodeChain *chain, const size_t index, void **out, const ds_destruct
     Node *node = prev_node->next;
     prev_node->next = node->next;
 
-    if (out) *out = get_data(chain, node);
-
-    free_node(chain, node, destroy);
+    if (!out)
+        free_node(chain, node, destroy);
+    else
+    {
+        // ownership transferred to `out`
+        *out = get_data(chain, node);
+        free_node(chain, node, NULL);
+    }
     return DS_ERR_NONE;
 }
