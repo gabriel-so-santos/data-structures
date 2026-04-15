@@ -37,6 +37,14 @@
             .destroy = (DestroyFunc),                                           \
             ._nodes  = ds_nc_alloc(value_size, value_align)                     \
         };                                                                      \
+                                                                                \
+        if (!cont._nodes)                                                       \
+            LIBDS_HANDLE_ERR(                                                   \
+                DS_ERR_ALLOCATION_FAILED,                                       \
+                LIBDS_STRINGIFY(ds_nc_alloc(value_size, value_align)),          \
+                __FILE__, __LINE__, __func__                                    \
+            );                                                                  \
+                                                                                \
         return cont;                                                            \
     }                                                                           \
                                                                                 \

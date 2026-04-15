@@ -37,6 +37,12 @@
             if ( !stack.copy(data, &value) )                                    \
             {                                                                   \
                 ds_nc_pop_front(stack._nodes, NULL, NULL);                      \
+                                                                                \
+                LIBDS_HANDLE_ERR(                                               \
+                    DS_ERR_COPY_FAILED,                                         \
+                    LIBDS_STRINGIFY(stack.copy(data, &value)),                  \
+                    __FILE__, __LINE__, __func__                                \
+                );                                                              \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \

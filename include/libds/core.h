@@ -84,10 +84,16 @@
 #define LIBDS_NC_GROWTH_FACTOR 0.5f
 #endif
 
+
 #if LIBDS_ENABLE_ERROR_PRINT || LIBDS_ENABLE_EXIT_ON_FAIL
-#define LIBDS_CHECK(expr) ds_handle_err((expr), #expr, __FILE__, __LINE__, __func__)
+#define LIBDS_CHECK(Expr) \
+    ds_handle_err((Expr), #Expr, __FILE__, __LINE__, __func__)
+#define LIBDS_HANDLE_ERR(ErrCode, Expr, File, Line, Func) \
+    ds_handle_err((ErrCode), (Expr), (File), (Line), (Func))
+
 #else //LIBDS_ENABLE_ERROR_PRINT || LIBDS_ENABLE_EXIT_ON_FAIL
 #define LIBDS_CHECK(expr) (expr)
+#define LIBDS_HANDLE_ERR(ErrCode, Expr, File, Line, Func)
 #endif //LIBDS_ENABLE_ERROR_PRINT || LIBDS_ENABLE_EXIT_ON_FAIL #else
 
 /* Debug helpers */
@@ -123,7 +129,7 @@ enum ds_error
 /**
  * @brief   Destructor function contract for stored values.
  *
- * @param   value Pointer to a fully initialized element.
+ * @param   data Pointer to a fully initialized element.
  *
  * The destructor is responsible for releasing any resources owned by the
  * value (e.g., heap-allocated fields, internal buffers).
@@ -133,7 +139,7 @@ enum ds_error
  *
  * @warning The function must assume `value` is valid and initialized.
  */
-typedef void (*ds_destructor_fn)(void *value);
+typedef void (*ds_destructor_fn)(void *data);
 
 /**
  * @brief   Copier function contract for value duplication.

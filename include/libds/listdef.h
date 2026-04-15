@@ -84,6 +84,12 @@
             if ( !list.copy(data, &value) )                                     \
             {                                                                   \
                 ds_nc_pop_front(list._nodes, NULL, NULL);                       \
+                                                                                \
+                LIBDS_HANDLE_ERR(                                               \
+                    DS_ERR_COPY_FAILED,                                         \
+                    LIBDS_STRINGIFY(list.copy(data, &value)),                   \
+                    __FILE__, __LINE__, __func__                                \
+                );                                                              \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -112,6 +118,12 @@
             if ( !list.copy(data, &value) )                                     \
             {                                                                   \
                 ds_nc_pop_back(list._nodes, NULL, NULL);                        \
+                                                                                \
+                LIBDS_HANDLE_ERR(                                               \
+                    DS_ERR_COPY_FAILED,                                         \
+                    LIBDS_STRINGIFY(list.copy(data, &value)),                   \
+                    __FILE__, __LINE__, __func__                                \
+                );                                                              \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \
@@ -137,9 +149,15 @@
             *((Type *)data) = value;                                            \
         else                                                                    \
         {                                                                       \
-            if ( !list.copy(data, &value) )                                     \
+            if (!list.copy(data, &value))                                       \
             {                                                                   \
                 ds_nc_pop_at(list._nodes, index, NULL, NULL);                   \
+                                                                                \
+                LIBDS_HANDLE_ERR(                                               \
+                    DS_ERR_COPY_FAILED,                                         \
+                    LIBDS_STRINGIFY(list.copy(data, &value)),                   \
+                    __FILE__, __LINE__, __func__                                \
+                );                                                              \
                 return DS_ERR_COPY_FAILED;                                      \
             }                                                                   \
         }                                                                       \

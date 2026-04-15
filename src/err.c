@@ -66,7 +66,7 @@ ds_handle_err(const enum ds_error err, const char *expr, const char *file, const
     #if LIBDS_ENABLE_ERROR_PRINT
     fprintf(
         stderr,
-        "\n%s (Code %d)\n"
+        "\n[LIBDS] %s (Code %d)\n"
         " --> %s:%d\n"
         "  | Function   : %s\n"
         "  | Expression : %s\n",
