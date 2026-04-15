@@ -267,11 +267,13 @@ ds_nc_bytes(const NodeChain *chain)
         curr_chunk = curr_chunk->next;
     }
 
-    const size_t struct_size = sizeof(NodeChain);
-    const size_t nodes_total_size = (chain->length + chain->stack_size) * chain->stride;
-    const size_t chunk_head_headers_size = chunk_count * sizeof(Node);
+    const size_t node_stride = chain->stride;
 
-    return struct_size + nodes_total_size + chunk_head_headers_size;
+    const size_t chain_struct_size  = sizeof(NodeChain);
+    const size_t nodes_total_size   = (chain->length + chain->stack_size) * node_stride;
+    const size_t chunk_headers_size = chunk_count * node_stride;
+
+    return chain_struct_size + nodes_total_size + chunk_headers_size;
 }
 
 enum ds_error
