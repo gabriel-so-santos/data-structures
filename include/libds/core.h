@@ -144,8 +144,8 @@ typedef void (*ds_destructor_fn)(void *data);
 /**
  * @brief   Copier function contract for value duplication.
  *
- * @param   dst_value Pointer to uninitialized destination memory.
- * @param   src_value Pointer to a valid source value.
+ * @param   dst Pointer to uninitialized destination memory.
+ * @param   src Pointer to a valid source value.
  *
  * The function must perform a deep copy from `src_value` into `dst_value`,
  * fully initializing the destination.
@@ -160,7 +160,7 @@ typedef void (*ds_destructor_fn)(void *data);
  * @note    On failure, the library will NOT invoke the destructor on
  *          `dst_value`.
  */
-typedef bool (*ds_copier_fn)(void *dst_value, const void *src_value);
+typedef bool (*ds_copier_fn)(void *dst, const void *src);
 
 /**
  * @brief   Converts an error code into a string.

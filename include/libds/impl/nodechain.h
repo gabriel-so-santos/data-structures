@@ -359,6 +359,6 @@ ds_nc_pop_back(struct ds_node_chain *chain, void **out, ds_destructor_fn destroy
 enum ds_error
 ds_nc_pop_at(struct ds_node_chain *chain, size_t index, void **out, ds_destructor_fn destroy);
 
-/** @} */  //End of NodeChainInternals group
+/** @} */ //end of NodeChainInternals group
 
 #endif //LIBDS_IMPL_NODECHAIN_H
