@@ -406,7 +406,12 @@
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
-        if (out) *out = *((Type *)data);                                        \
+        if (!out && list.destroy)                                               \
+            list.destroy(data);                                                 \
+                                                                                \
+        else if (out)                                                           \
+            *out = *((Type *)data);                                             \
+                                                                                \
         return DS_ERR_NONE;                                                     \
     }                                                                           \
 /* end of macro */

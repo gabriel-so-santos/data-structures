@@ -155,7 +155,12 @@
         );                                                                      \
         if (error) return error;                                                \
                                                                                 \
-        if (out) *out = *((Type *)data);                                        \
+        if (!out && queue.destroy)                                              \
+            queue.destroy(data);                                                \
+                                                                                \
+        else if (out)                                                           \
+            *out = *((Type *)data);                                             \
+                                                                                \
         return DS_ERR_NONE;                                                     \
     }                                                                           \
 /* end of macro */    
