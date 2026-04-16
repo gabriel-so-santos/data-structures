@@ -1,0 +1,27 @@
+# Object files
+*.o
+*.obj
+
+# Compiled libraries
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+
+# Executables
+*.out
+*.exe
+*.app
+
+# Artifacts
+build/
+out/
+bin/
+
+# IDEs
+.idea/
+.vscode/
+
+
+TODO.txt
