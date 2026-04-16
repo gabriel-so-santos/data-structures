@@ -296,37 +296,37 @@ LIBDS_DEF_LIST(char *, ListStr, list_str, copy_str, destroy_str)
 |:------------------------------|:----------------|:---------------------------------------------------------------------------------------------------------------------------|
 | `create(void)`                | $O(1)$          | Allocates and initializes a new container.                                                                                 |
 | `delete(&cont)`               | $O(N)$          | Frees all nodes, applies destructors, and nullifies the reference.                                                         |
-| `clear(cont)`                 | $O(1)$*         | Moves all active nodes to the recycle stack. *_$O(N)$ if a destructor is set)._                                            |
-| `deep_clear(cont)`            | $O(\log N)$*    | Clears data and frees recycled nodes. *_$O(N)$ if a destructor is set; up to $O(N^2)$ when paired with linear allocation._ |
+| `clear(cont)`                 | $O(1)$*         | Moves all active nodes to the recycle stack. * $O(N)$ if a destructor is set).                                            |
+| `deep_clear(cont)`            | $O(\log N)$*    | Clears data and frees recycled nodes. * $O(N)$ if a destructor is set; up to $O(N^2)$ when paired with linear allocation. |
 | `copy(dst, src)`              | $O(N)$          | Performs a deep copy using the container's copier function. Rolls back safely on failure.                                  |
 | `get_front(cont,⠀&out)`       | $O(1)$          | Retrieves the first element without removing it.                                                                           |
 | `get_back(cont,⠀&out)`        | $O(1)$          | Retrieves the last element without removing it.                                                                            |
 | `get_at(cont,⠀index,⠀&out)`   | $O(N)$          | Retrieves the element at the specified index within the range $[0, N)$.                                                    |
 | `length(cont)` / `size(cont)` | $O(1)$          | Returns the quantity of active nodes (they behave equally).                                                                |
-| `bytes(cont)`                 | $O(\log N)$*    | Returns the total allocated heap memory. *_May be $O(N)$, depends on allocation strategy._                                 |
+| `bytes(cont)`                 | $O(\log N)$*    | Returns the total allocated heap memory. *May be $O(N)$, depends on allocation strategy.                                 |
 | `is_empty(cont)`              | $O(1)$          | Returns `true` if the container is empty.                                                                                  |
 
 ### Stack Specific
 
 | Function             | Time Complexity | Description                                                                                                                            |
 |:---------------------|:----------------|:---------------------------------------------------------------------------------------------------------------------------------------|
-| `push(stack,⠀value)` | $O(1)$*         | Pushes a value to the top of the stack. *_May trigger stack growth._                                                                   |
+| `push(stack,⠀value)` | $O(1)$*         | Pushes a value to the top of the stack. *May trigger stack growth.                                                                   |
 | `pop(stack,⠀&out)`   | $O(1)$          | Pops the value from the top of the stack. Ownership is transferred to `out`. If `NULL` is passed, the value is automaticaly destroyed. |
 
 ### Queue Specific
 
 | Function                | Time Complexity | Description                                                                                                                                 |
 |:------------------------|:----------------|:--------------------------------------------------------------------------------------------------------------------------------------------|
-| `enqueue(queue,⠀value)` | $O(1)$*         | Inserts a value at the end of the queue. *_May trigger queue growth._                                                                       |
+| `enqueue(queue,⠀value)` | $O(1)$*         | Inserts a value at the end of the queue. *May trigger queue growth.                                                                       |
 | `dequeue(queue,⠀&out)`  | $O(1)$          | Removes the value from the front of the queue. Ownership is transferred to `out`. If `NULL` is passed, the value is automaticaly destroyed. |
 
 ### List Specific
 
 | Function                                           | Time Complexity | Description                                                                                                                                                                               |
 |:---------------------------------------------------|:----------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `push_front(list,⠀value)` / `prepend(list,⠀value)` | $O(1)$*         | Inserts a value at the beginning of the list (they behave equally). *_May trigger list growth._                                                                                           |
-| `push_back(list,⠀value)` / `append(list,⠀value)`   | $O(1)$*         | Inserts a value at the end of the list (they behave equally). *_May trigger list growth._                                                                                                 |
-| `push_at(list,⠀index,⠀value)`                      | $O(N)$*         | Inserts a value at the given index within the range $[0, N]$. *_$O(1)$ if index = length. May trigger list growth._                                                                       |
+| `push_front(list,⠀value)` / `prepend(list,⠀value)` | $O(1)$*         | Inserts a value at the beginning of the list (they behave equally). *May trigger list growth.                                                                                           |
+| `push_back(list,⠀value)` / `append(list,⠀value)`   | $O(1)$*         | Inserts a value at the end of the list (they behave equally). *May trigger list growth.                                                                                                 |
+| `push_at(list,⠀index,⠀value)`                      | $O(N)$*         | Inserts a value at the given index within the range $[0, N]$. * $O(1)$ if index == length. May trigger list growth.                                                                       |
 | `set_front(list,⠀value)`                           | $O(1)$          | Replaces the first element. Destroys the old value.                                                                                                                                       |
 | `set_back(list,⠀value)`                            | $O(1)$          | Replaces the last element. Destroys the old value.                                                                                                                                        |
 | `set_at(list,⠀index,⠀value)`                       | $O(N)$          | Replaces the element at the specified index within the range $[0, N)$. Destroys the old value.                                                                                            |
@@ -436,8 +436,6 @@ with corresponding sizes equal to these alignments, the memory layout of the nod
 
 No unnecessary padding is introduced, only what alignment strictly requires.
 
-_Note: the growth is proportional to the current number of elements, not the previous batch size._
-
 ## Memory Allocation Strategy
 
 To prevent excessive heap fragmentation, memory is allocated in contiguous chunks (batches) and sliced into node slots.
@@ -450,7 +448,7 @@ When the recycle stack is empty, the library triggers a geometric heap allocatio
 
 The effective batch size is calculated as:
 
-$$B_n = \max(B_{\min} , G \cdot N_n)$$
+### $B_n = \max(B_{\min} , G \cdot N_n)$
 
 where:
 - $B_n$ is the allocated size at step $n$,
@@ -461,19 +459,19 @@ where:
 
 Growth progression examples based on configuration:
 
-#### Default ($B_{\min} = 8,  G = \frac{1}{2}$)
+#### Default $(B_{\min} = 8,  G = \frac{1}{2})$
 
-$ 8 \to 16 \to 24 \to 36 \to 54 \to 81 \to \dots$
+$8 \to 16 \to 24 \to 36 \to 54 \to 81 \to \dots$
 
-#### Doubling ($B_{\min} = 1,  G = 1$)
+#### Doubling $(B_{\min} = 1,  G = 1)$
 
-$ 1 \to  2 \to  4 \to  8 \to 16 \to 32 \to \dots$
+$1 \to  2 \to  4 \to  8 \to 16 \to 32 \to \dots$
 
-#### Linear ($B_{\min} = 16,  G = 0$)
+#### Linear $(B_{\min} = 16,  G = 0)$
 
 $16 \to 32 \to 48 \to 64 \to 80 \to 96 \to \dots$
 
-
+_Note: the growth is proportional to the current number of elements, not the previous batch size._
 
 ## Error Handling
 
